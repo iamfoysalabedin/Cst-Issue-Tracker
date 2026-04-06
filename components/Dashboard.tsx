@@ -1,0 +1,286 @@
+
+import React, { useState, useEffect } from 'react';
+import { 
+  PieChart, Pie, Cell, ResponsiveContainer, Tooltip, 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend,
+  LineChart, Line, AreaChart, Area
+} from 'recharts';
+import { 
+  AlertCircle, 
+  Bug, 
+  Smartphone, 
+  Lightbulb, 
+  HelpCircle, 
+  Activity,
+  ArrowUpRight,
+  ArrowDownRight,
+  ChevronDown
+} from 'lucide-react';
+import { dbService } from '../services/dbService';
+import { Issue, MonthlyEntry, SystemDowntime } from '../types';
+import { CHART_COLORS } from '../constants';
+
+const Dashboard: React.FC = () => {
+  const [issues, setIssues] = useState<Issue[]>([]);
+  const [monthlyEntries, setMonthlyEntries] = useState<MonthlyEntry[]>([]);
+  const [downtime, setDowntime] = useState<SystemDowntime[]>([]);
+  const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+  const [selectedMonth, setSelectedMonth] = useState<string>(String(new Date().getMonth() + 1).padStart(2, '0'));
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const [i, m, d] = await Promise.all([
+        dbService.getIssues(),
+        dbService.getMonthlyEntries(),
+        dbService.getDowntime(),
+      ]);
+      setIssues(i);
+      setMonthlyEntries(m);
+      setDowntime(d);
+    };
+    fetchData();
+  }, []);
+
+  // Filter and process data
+  const filteredIssues = issues.filter(issue => {
+    const dateToUse = issue.issue_date || issue.created_at;
+    if (typeof dateToUse !== 'string') return false;
+    
+    const [year, month] = dateToUse.split('-');
+    const matchesYear = year === selectedYear;
+    const matchesMonth = selectedMonth ? month === selectedMonth : true;
+    
+    return matchesYear && matchesMonth;
+  });
+
+  const monthKey = selectedMonth ? `${selectedYear}-${selectedMonth}` : '';
+  const currentMonthlyEntry = monthlyEntries.find(e => e.month === monthKey);
+
+  // Metrics
+  const stats = [
+    { label: 'Total Issues', value: currentMonthlyEntry?.total_issues || filteredIssues.length, icon: AlertCircle, color: 'text-indigo-600', bg: 'bg-indigo-100 dark:bg-indigo-900/20' },
+    { label: 'System Bugs', value: currentMonthlyEntry?.system_bugs || filteredIssues.filter(i => i.issue_type === 'System Bugs').length, icon: Bug, color: 'text-rose-600', bg: 'bg-rose-100 dark:bg-rose-900/20' },
+    { label: 'Device Issues', value: currentMonthlyEntry?.device_issues || filteredIssues.filter(i => i.issue_type === 'Device Issues').length, icon: Smartphone, color: 'text-amber-600', bg: 'bg-amber-100 dark:bg-amber-900/20' },
+    { label: 'Awareness', value: currentMonthlyEntry?.awareness || filteredIssues.filter(i => i.issue_type === 'Awareness').length, icon: Lightbulb, color: 'text-emerald-600', bg: 'bg-emerald-100 dark:bg-emerald-900/20' },
+    { label: 'Help Requests', value: currentMonthlyEntry?.help_requests || filteredIssues.filter(i => i.issue_type === 'Help Requests').length, icon: HelpCircle, color: 'text-sky-600', bg: 'bg-sky-100 dark:bg-sky-900/20' },
+    { label: 'System Downtime', value: `${(downtime.filter(d => {
+      if (typeof d.date !== 'string') return false;
+      const [y, m] = d.date.split('-');
+      return y === selectedYear && (selectedMonth ? m === selectedMonth : true);
+    }).reduce((acc, d) => acc + d.duration_minutes, 0) / 60).toFixed(1)}h`, icon: Activity, color: 'text-fuchsia-600', bg: 'bg-fuchsia-100 dark:bg-fuchsia-900/20' },
+  ];
+
+  // Frequent Issue Companies
+  const companyCounts = filteredIssues.reduce((acc, issue) => {
+    acc[issue.client_name] = (acc[issue.client_name] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  // Fixed type casting for Object.entries to resolve 'unknown' operator issues on line 67 and 68
+  const frequentCompanies = Object.entries(companyCounts)
+    .filter(([, count]) => (count as number) >= 2)
+    .sort((a, b) => (b[1] as number) - (a[1] as number));
+
+  // Chart Data
+  const issueTypeData = [
+    { name: 'System Bugs', value: currentMonthlyEntry?.system_bugs || filteredIssues.filter(i => i.issue_type === 'System Bugs').length },
+    { name: 'Device Issues', value: currentMonthlyEntry?.device_issues || filteredIssues.filter(i => i.issue_type === 'Device Issues').length },
+    { name: 'Awareness', value: currentMonthlyEntry?.awareness || filteredIssues.filter(i => i.issue_type === 'Awareness').length },
+    { name: 'Help Requests', value: currentMonthlyEntry?.help_requests || filteredIssues.filter(i => i.issue_type === 'Help Requests').length },
+  ].filter(d => d.value > 0);
+
+  const statusData = ['Open', 'Close', 'Pending', 'In Progress', 'Done'].map(status => ({
+    name: status,
+    count: filteredIssues.filter(i => i.status === status).length
+  }));
+
+  const downtimeTimeline = downtime
+    .filter(d => {
+      if (typeof d.date !== 'string') return false;
+      const [y, m] = d.date.split('-');
+      return y === selectedYear && (selectedMonth ? m === selectedMonth : true);
+    })
+    .map(d => ({
+      date: selectedMonth ? d.date.split('-')[2] : `${d.date.split('-')[1]}/${d.date.split('-')[2]}`,
+      duration: d.duration_minutes,
+      system: d.system_name
+    }));
+
+  return (
+    <div className="space-y-8 animate-in fade-in duration-500">
+      {/* Header & Filter */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Performance Overview</h1>
+          <p className="text-slate-500 dark:text-slate-400">Track and analyze system health and issues</p>
+        </div>
+        <div className="flex items-center gap-4 bg-white dark:bg-slate-900 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div className="flex items-center gap-2 border-r border-slate-200 dark:border-slate-800 pr-4">
+            <span className="text-xs font-bold text-slate-400 pl-2 uppercase">Year</span>
+            <select 
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              className="bg-transparent text-sm font-semibold outline-none cursor-pointer text-indigo-600"
+            >
+              {Array.from({ length: 5 }, (_, i) => {
+                const year = new Date().getFullYear() - i;
+                return <option key={year} value={year}>{year}</option>;
+              })}
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-400 pl-2 uppercase">Month</span>
+            <select 
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="bg-transparent text-sm font-semibold outline-none pr-2 cursor-pointer text-indigo-600"
+            >
+              <option value="">All Months</option>
+              {Array.from({ length: 12 }, (_, i) => {
+                const monthNum = String(i + 1).padStart(2, '0');
+                const monthName = new Date(2000, i).toLocaleString('default', { month: 'long' });
+                return <option key={monthNum} value={monthNum}>{monthName}</option>;
+              })}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Metrics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+        {stats.map((stat, i) => (
+          <div key={i} className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
+            <div className={`w-10 h-10 ${stat.bg} rounded-xl flex items-center justify-center mb-4`}>
+              <stat.icon size={20} className={stat.color} />
+            </div>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">{stat.label}</p>
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{stat.value}</h3>
+          </div>
+        ))}
+      </div>
+
+      {/* Middle Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Frequent Companies */}
+        <div className="lg:col-span-1 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="font-bold text-slate-900 dark:text-white">Frequent Reporters</h3>
+            <span className="text-[10px] px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full font-bold uppercase">Critical</span>
+          </div>
+          <div className="space-y-4">
+            {frequentCompanies.length > 0 ? frequentCompanies.map(([name, count], i) => (
+              <div key={name} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-900 flex items-center justify-center text-xs font-bold text-slate-400">#{i+1}</div>
+                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{name}</span>
+                </div>
+                <div className="flex items-center gap-1.5 px-2 py-1 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-lg text-xs font-bold">
+                  <ArrowUpRight size={14} />
+                  {count} Issues
+                </div>
+              </div>
+            )) : (
+              <div className="py-12 text-center text-slate-400">
+                <p className="text-sm">No frequent reports this month</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Issue Distribution Pie */}
+        <div className="lg:col-span-1 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm min-h-[350px]">
+          <h3 className="font-bold text-slate-900 dark:text-white mb-6">Distribution by Type</h3>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={issueTypeData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {issueTypeData.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
+                  itemStyle={{ color: '#fff' }}
+                />
+                <Legend iconType="circle" />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Status Breakdown Bar */}
+        <div className="lg:col-span-1 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm min-h-[350px]">
+          <h3 className="font-bold text-slate-900 dark:text-white mb-6">Status Breakdown</h3>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={statusData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 600 }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 600 }} />
+                <Tooltip 
+                  cursor={{ fill: 'rgba(226, 232, 240, 0.4)' }}
+                  contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
+                />
+                <Bar dataKey="count" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={32} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* Downtime Timeline Chart */}
+      <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h3 className="font-bold text-slate-900 dark:text-white">System Downtime Timeline</h3>
+            <p className="text-sm text-slate-500">Duration by system across the month</p>
+          </div>
+          <div className="flex gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-rose-500" />
+              <span className="text-xs font-medium text-slate-500">Critical Duration</span>
+            </div>
+          </div>
+        </div>
+        <div className="h-80">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={downtimeTimeline.length > 0 ? downtimeTimeline : [{date: '01', duration: 0}, {date: '30', duration: 0}]}>
+              <defs>
+                <linearGradient id="colorDur" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#f43f5e" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+              <XAxis dataKey="date" axisLine={false} tickLine={false} label={{ value: 'Day of Month', position: 'insideBottom', offset: -5, fontSize: 10 }} />
+              <YAxis axisLine={false} tickLine={false} unit="m" />
+              <Tooltip 
+                contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
+                labelFormatter={(label) => `Day: ${label}`}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="duration" 
+                stroke="#f43f5e" 
+                strokeWidth={3}
+                fillOpacity={1} 
+                fill="url(#colorDur)" 
+                animationDuration={1500}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Dashboard;
