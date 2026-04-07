@@ -74,31 +74,26 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-6 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl gradient-bg flex items-center justify-center text-white shadow-lg">
-                <ShieldCheck size={24} />
-              </div>
-              <div>
-                <h1 className="font-bold text-xl tracking-tight text-slate-900 dark:text-white">Issue Tracker</h1>
-                <span className="text-xs font-medium text-slate-500 uppercase tracking-widest">INOVACE</span>
-              </div>
+          <div className="p-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/50">
+            <div>
+              <h1 className="font-bold text-lg tracking-tight text-slate-900 dark:text-white leading-none">Issue Tracker</h1>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">INOVACE</span>
             </div>
             <button 
               onClick={() => setIsSidebarOpen(false)}
-              className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 lg:hidden"
+              className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 lg:hidden"
             >
-              <X size={20} />
+              <X size={18} />
             </button>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto no-scrollbar">
+          <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto no-scrollbar">
             {navItems.map((item) => {
               if (item.type === 'divider') {
                 return (
-                  <div key={item.id} className="px-3 pt-6 pb-2">
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                  <div key={item.id} className="px-3 pt-4 pb-1">
+                    <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                       {item.label}
                     </span>
                   </div>
@@ -114,7 +109,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   onClick={() => {
                     if (window.innerWidth < 1024) setIsSidebarOpen(false);
                   }}
-                  className={({ isActive }) => `w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  className={({ isActive }) => `w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] font-medium transition-all ${
                     isActive 
                       ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 shadow-sm' 
                       : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
@@ -122,7 +117,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 >
                   {({ isActive }) => (
                     <>
-                      <Icon size={18} className={isActive ? 'text-indigo-600 dark:text-indigo-400' : ''} />
+                      <Icon size={16} className={isActive ? 'text-indigo-600 dark:text-indigo-400' : ''} />
                       {item.label}
                     </>
                   )}
@@ -132,17 +127,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </nav>
 
           {/* User & Theme */}
-          <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+          <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
             <button 
               onClick={() => setIsDarkMode(!isDarkMode)}
-              className="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
+              className="w-full flex items-center justify-between gap-2.5 px-3 py-1.5 rounded-md text-[13px] font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
             >
-              <div className="flex items-center gap-3">
-                {isDarkMode ? <Moon size={18} /> : <Sun size={18} />}
+              <div className="flex items-center gap-2.5">
+                {isDarkMode ? <Moon size={16} /> : <Sun size={16} />}
                 <span>{isDarkMode ? 'Dark Mode' : 'Light Mode'}</span>
               </div>
-              <div className={`w-8 h-4 rounded-full relative transition-colors ${isDarkMode ? 'bg-indigo-600' : 'bg-slate-300'}`}>
-                 <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${isDarkMode ? 'left-4.5' : 'left-0.5'}`} />
+              <div className={`w-7 h-3.5 rounded-full relative transition-colors ${isDarkMode ? 'bg-indigo-600' : 'bg-slate-300'}`}>
+                 <div className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white transition-all ${isDarkMode ? 'left-4' : 'left-0.5'}`} />
               </div>
             </button>
           </div>
@@ -152,15 +147,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Main Content */}
       <main className={`flex-1 transition-all duration-300 ${isSidebarOpen ? 'lg:pl-64' : ''}`}>
         {/* Header */}
-        <header className="sticky top-0 z-30 flex items-center justify-between px-6 py-4 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-4">
+        <header className="sticky top-0 z-30 flex items-center justify-between px-5 py-3 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+          <div className="flex items-center gap-3">
             <button 
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500"
+              className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500"
             >
-              <Menu size={20} />
+              <Menu size={18} />
             </button>
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+            <h2 className="text-base font-semibold text-slate-900 dark:text-white">
               {currentLabel}
             </h2>
           </div>
@@ -171,7 +166,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </header>
 
         {/* Page Content */}
-        <div className="p-6">
+        <div className="p-5">
           {children}
         </div>
       </main>

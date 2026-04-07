@@ -248,58 +248,58 @@ const IssueReports: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-4 animate-in fade-in duration-500">
       {/* Filters Bar */}
-      <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row gap-4 items-center">
+      <div className="bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row gap-3 items-center">
         <div className="relative flex-1 w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
           <input 
             type="text"
             placeholder="Search by client or details..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-sm"
+            className="w-full pl-9 pr-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs"
           />
         </div>
         
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-400 uppercase">Month:</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-bold text-slate-400 uppercase">Month:</span>
             <input 
               type="month"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"
+              className="px-2 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
-          <div className="flex items-center gap-2 border-l border-slate-200 dark:border-slate-800 pl-2">
+          <div className="flex items-center gap-1.5 border-l border-slate-200 dark:border-slate-800 pl-2">
             <input 
               type="date"
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
-              className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"
+              className="px-2 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"
             />
-            <span className="text-slate-400">to</span>
+            <span className="text-slate-400 text-xs">to</span>
             <input 
               type="date"
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
-              className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"
+              className="px-2 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
           {(search || selectedMonth || fromDate || toDate) && (
             <button 
               onClick={clearFilters}
-              className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl text-sm font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center gap-2 animate-in fade-in zoom-in-95 duration-200"
+              className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-lg text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center gap-1.5 animate-in fade-in zoom-in-95 duration-200"
             >
-              <X size={16} />
+              <X size={14} />
               Clear
             </button>
           )}
           
-          <div className="flex items-center gap-2 border-l border-slate-200 dark:border-slate-800 pl-2">
+          <div className="flex items-center gap-1.5 border-l border-slate-200 dark:border-slate-800 pl-2">
             <input 
               type="file" 
               ref={fileInputRef} 
@@ -309,24 +309,24 @@ const IssueReports: React.FC = () => {
             />
             <button 
               onClick={() => fileInputRef.current?.click()}
-              className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all"
+              className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
               title="Upload Excel"
             >
-              <Upload size={18} />
+              <Upload size={16} />
             </button>
             <button 
               onClick={downloadSample}
-              className="p-2 text-slate-500 hover:text-emerald-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all"
+              className="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
               title="Download Sample"
             >
-              <FileSpreadsheet size={18} />
+              <FileSpreadsheet size={16} />
             </button>
             <button 
               onClick={exportCSV}
-              className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all"
+              className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
               title="Export CSV"
             >
-              <Download size={18} />
+              <Download size={16} />
             </button>
           </div>
         </div>
@@ -334,87 +334,87 @@ const IssueReports: React.FC = () => {
 
       {/* Bulk Actions */}
       {selectedIds.length > 0 && (
-        <div className="flex items-center justify-between p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-2xl animate-in slide-in-from-top-2">
-          <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">{selectedIds.length} items selected</span>
+        <div className="flex items-center justify-between p-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-xl animate-in slide-in-from-top-2">
+          <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">{selectedIds.length} items selected</span>
           <button 
             onClick={handleDeleteSelected}
-            className="flex items-center gap-2 px-4 py-2 bg-rose-600 text-white rounded-xl text-sm font-bold shadow-lg hover:bg-rose-700 transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-bold shadow-md hover:bg-rose-700 transition-all"
           >
-            <Trash2 size={16} />
+            <Trash2 size={14} />
             Delete Selected
           </button>
         </div>
       )}
 
       {/* Table */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
-                <th className="px-6 py-4 w-10">
+                <th className="px-4 py-3 w-8">
                   <button onClick={toggleSelectAll} className="text-slate-400 hover:text-indigo-600">
-                    {selectedIds.length === currentIssues.length && currentIssues.length > 0 ? <CheckSquare size={18} /> : <Square size={18} />}
+                    {selectedIds.length === currentIssues.length && currentIssues.length > 0 ? <CheckSquare size={16} /> : <Square size={16} />}
                   </button>
                 </th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Client</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Type</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Priority</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Assigned</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Issue Date</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Actions</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Client</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Type</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Priority</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Assigned</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Issue Date</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
               {currentIssues.length > 0 ? currentIssues.map(issue => (
                 <tr key={issue.id} className={`hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors ${selectedIds.includes(issue.id) ? 'bg-indigo-50/30 dark:bg-indigo-900/10' : ''}`}>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-2.5">
                     <button onClick={() => toggleSelect(issue.id)} className={selectedIds.includes(issue.id) ? 'text-indigo-600' : 'text-slate-300'}>
-                      {selectedIds.includes(issue.id) ? <CheckSquare size={18} /> : <Square size={18} />}
+                      {selectedIds.includes(issue.id) ? <CheckSquare size={16} /> : <Square size={16} />}
                     </button>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="font-semibold text-slate-900 dark:text-white text-sm">{issue.client_name}</div>
-                    <div className="text-xs text-slate-400 truncate max-w-[200px]">{issue.issue_details}</div>
+                  <td className="px-4 py-2.5">
+                    <div className="font-semibold text-slate-900 dark:text-white text-xs">{issue.client_name}</div>
+                    <div className="text-[10px] text-slate-400 truncate max-w-[180px]">{issue.issue_details}</div>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="text-xs px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-md font-medium">
+                  <td className="px-4 py-2.5">
+                    <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-md font-medium">
                       {issue.issue_type}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className={`text-[10px] px-2 py-1 rounded-full font-bold uppercase border ${(PRIORITY_COLORS as any)[issue.priority] || 'bg-slate-100'}`}>
+                  <td className="px-4 py-2.5">
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase border ${(PRIORITY_COLORS as any)[issue.priority] || 'bg-slate-100'}`}>
                       {issue.priority}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className={`text-xs font-semibold ${((STATUS_COLORS as any)[issue.status] || 'text-slate-600').split(' ')[1]}`}>
+                  <td className="px-4 py-2.5">
+                    <span className={`text-[10px] font-semibold ${((STATUS_COLORS as any)[issue.status] || 'text-slate-600').split(' ')[1]}`}>
                       {issue.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm font-medium text-slate-600 dark:text-slate-400">{issue.assigned_person}</td>
-                  <td className="px-6 py-4 text-sm font-medium text-slate-600 dark:text-slate-400">{issue.issue_date || new Date(issue.created_at).toLocaleDateString()}</td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
+                  <td className="px-4 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400">{issue.assigned_person}</td>
+                  <td className="px-4 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400">{issue.issue_date || new Date(issue.created_at).toLocaleDateString()}</td>
+                  <td className="px-4 py-2.5 text-right">
+                    <div className="flex items-center justify-end gap-1.5">
                       <button 
                         onClick={() => setEditingIssue(issue)}
-                        className="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-all"
+                        className="p-1 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-md transition-all"
                       >
-                        <Edit2 size={16} />
+                        <Edit2 size={14} />
                       </button>
                       <button 
                         onClick={() => handleDelete(issue.id)}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-all"
+                        className="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-md transition-all"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </td>
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
+                  <td colSpan={8} className="px-4 py-10 text-center text-slate-400 text-xs">
                     No issues found matching your criteria.
                   </td>
                 </tr>
@@ -424,18 +424,18 @@ const IssueReports: React.FC = () => {
         </div>
 
         {/* Pagination & Rows per page */}
-        <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/30 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-slate-500">Showing {(currentPage-1)*itemsPerPage+1} to {Math.min(currentPage*itemsPerPage, filteredIssues.length)} of {filteredIssues.length} issues</span>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-400 font-bold uppercase">Rows:</span>
+        <div className="px-4 py-3 bg-slate-50 dark:bg-slate-800/30 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-slate-500">Showing {(currentPage-1)*itemsPerPage+1} to {Math.min(currentPage*itemsPerPage, filteredIssues.length)} of {filteredIssues.length}</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] text-slate-400 font-bold uppercase">Rows:</span>
               <select 
                 value={itemsPerPage}
                 onChange={(e) => {
                   setItemsPerPage(Number(e.target.value));
                   setCurrentPage(1);
                 }}
-                className="bg-transparent text-sm font-bold text-slate-600 dark:text-slate-400 outline-none cursor-pointer"
+                className="bg-transparent text-xs font-bold text-slate-600 dark:text-slate-400 outline-none cursor-pointer"
               >
                 {[10, 20, 50, 100, 500, 1000].map(v => <option key={v} value={v}>{v}</option>)}
               </select>
@@ -443,21 +443,21 @@ const IssueReports: React.FC = () => {
           </div>
           
           {totalPages > 1 && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <button 
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="p-2 border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-30 dark:text-white"
+                className="p-1.5 border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-30 dark:text-white"
               >
-                <ChevronLeft size={16} />
+                <ChevronLeft size={14} />
               </button>
-              <span className="text-sm font-bold px-2 dark:text-white">{currentPage} / {totalPages}</span>
+              <span className="text-xs font-bold px-1.5 dark:text-white">{currentPage} / {totalPages}</span>
               <button 
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                className="p-2 border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-30 dark:text-white"
+                className="p-1.5 border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-30 dark:text-white"
               >
-                <ChevronRight size={16} />
+                <ChevronRight size={14} />
               </button>
             </div>
           )}
@@ -467,76 +467,76 @@ const IssueReports: React.FC = () => {
       {/* Edit Modal */}
       {editingIssue && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800">
-              <h3 className="font-bold text-xl dark:text-white">Edit Issue</h3>
-              <button onClick={() => setEditingIssue(null)} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-                <X size={20} />
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800">
+              <h3 className="font-bold text-base dark:text-white">Edit Issue</h3>
+              <button onClick={() => setEditingIssue(null)} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                <X size={18} />
               </button>
             </div>
-            <form onSubmit={handleUpdate} className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleUpdate} className="p-4 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-400 uppercase">Client Name</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Client Name</label>
                   <input 
                     type="text"
                     value={editingIssue.client_name}
                     onChange={(e) => setEditingIssue({...editingIssue, client_name: e.target.value})}
-                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white"
+                    className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white text-xs"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-400 uppercase">Type</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Type</label>
                   <select 
                     value={editingIssue.issue_type}
                     onChange={(e) => setEditingIssue({...editingIssue, issue_type: e.target.value})}
-                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white"
+                    className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white text-xs"
                   >
                     {options.issueTypes.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-400 uppercase">Priority</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Priority</label>
                   <select 
                     value={editingIssue.priority}
                     onChange={(e) => setEditingIssue({...editingIssue, priority: e.target.value})}
-                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white"
+                    className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white text-xs"
                   >
                     {options.priorities.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-400 uppercase">Status</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Status</label>
                   <select 
                     value={editingIssue.status}
                     onChange={(e) => setEditingIssue({...editingIssue, status: e.target.value})}
-                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white"
+                    className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white text-xs"
                   >
                     {options.statuses.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-400 uppercase">Issue Date</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Issue Date</label>
                   <input 
                     type="date"
                     value={editingIssue.issue_date || ''}
                     onChange={(e) => setEditingIssue({...editingIssue, issue_date: e.target.value})}
-                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white"
+                    className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white text-xs"
                   />
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-400 uppercase">Details</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase">Details</label>
                 <textarea 
-                  rows={4}
+                  rows={3}
                   value={editingIssue.issue_details}
                   onChange={(e) => setEditingIssue({...editingIssue, issue_details: e.target.value})}
-                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white resize-none"
+                  className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white resize-none text-xs"
                 />
               </div>
-              <div className="flex gap-3 mt-6">
-                <button type="button" onClick={() => setEditingIssue(null)} className="flex-1 px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Cancel</button>
-                <button type="submit" className="flex-1 px-4 py-3 gradient-bg text-white font-bold rounded-xl shadow-lg hover:opacity-90 transition-opacity">Update Issue</button>
+              <div className="flex gap-2 mt-4">
+                <button type="button" onClick={() => setEditingIssue(null)} className="flex-1 px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg font-bold text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Cancel</button>
+                <button type="submit" className="flex-1 px-3 py-2 gradient-bg text-white font-bold rounded-lg shadow-md hover:opacity-90 transition-opacity text-xs">Update Issue</button>
               </div>
             </form>
           </div>
@@ -546,27 +546,27 @@ const IssueReports: React.FC = () => {
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm.show && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200">
-            <div className="p-8 text-center">
-              <div className="w-16 h-16 bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Trash2 size={32} />
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-xs shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200">
+            <div className="p-6 text-center">
+              <div className="w-12 h-12 bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Trash2 size={24} />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Confirm Deletion</h3>
-              <p className="text-slate-500 dark:text-slate-400">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">Confirm Deletion</h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 {showDeleteConfirm.isBulk 
-                  ? `Are you sure you want to delete ${selectedIds.length} selected issues? This action cannot be undone.`
-                  : 'Are you sure you want to delete this issue? This action cannot be undone.'}
+                  ? `Delete ${selectedIds.length} selected issues?`
+                  : 'Delete this issue?'}
               </p>
-              <div className="flex gap-3 mt-8">
+              <div className="flex gap-2 mt-6">
                 <button 
                   onClick={() => setShowDeleteConfirm({ show: false, id: null, isBulk: false })}
-                  className="flex-1 px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                  className="flex-1 px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg font-bold text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                 >
                   Cancel
                 </button>
                 <button 
                   onClick={confirmDelete}
-                  className="flex-1 px-4 py-3 bg-rose-600 text-white font-bold rounded-xl shadow-lg hover:bg-rose-700 transition-colors"
+                  className="flex-1 px-3 py-2 bg-rose-600 text-white font-bold rounded-lg shadow-md hover:bg-rose-700 transition-colors text-xs"
                 >
                   Delete
                 </button>

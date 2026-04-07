@@ -88,46 +88,46 @@ const IssueEntry: React.FC = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto animate-in slide-in-from-bottom-4 duration-500">
-      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
-        <div className="gradient-bg p-8 text-white">
-          <h2 className="text-2xl font-bold">New Issue Report</h2>
-          <p className="opacity-80 text-sm mt-1">Submit a detailed report to help our team investigate.</p>
+    <div className="max-w-xl mx-auto animate-in slide-in-from-bottom-4 duration-500">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg overflow-hidden">
+        <div className="gradient-bg p-5 text-white">
+          <h2 className="text-lg font-bold">New Issue Report</h2>
+          <p className="opacity-80 text-[11px] mt-0.5">Submit a detailed report to help our team investigate.</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8 space-y-6">
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
           {error && (
-            <div className="flex items-center gap-2 p-4 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-xl border border-rose-100 dark:border-rose-800 text-sm">
-              <AlertCircle size={18} />
+            <div className="flex items-center gap-2 p-3 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-lg border border-rose-100 dark:border-rose-800 text-[11px]">
+              <AlertCircle size={14} />
               {error}
             </div>
           )}
 
           {success && (
-            <div className="flex items-center gap-2 p-4 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-xl border border-emerald-100 dark:border-emerald-800 text-sm">
-              <CheckCircle size={18} />
+            <div className="flex items-center gap-2 p-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-lg border border-emerald-100 dark:border-emerald-800 text-[11px]">
+              <CheckCircle size={14} />
               Issue submitted successfully!
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Client Name *</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Client Name *</label>
               <input 
                 type="text"
                 value={formData.client_name}
                 onChange={(e) => setFormData({...formData, client_name: e.target.value})}
                 placeholder="e.g. Acme Corp"
-                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs"
               />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Issue Type *</label>
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Issue Type *</label>
               <select 
                 value={formData.issue_type}
                 onChange={(e) => setFormData({...formData, issue_type: e.target.value})}
-                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs"
               >
                 <option value="">Select Type</option>
                 <option value="System Bugs">System Bugs</option>
@@ -137,68 +137,68 @@ const IssueEntry: React.FC = () => {
               </select>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Priority *</label>
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Priority *</label>
               <select 
                 value={formData.priority}
                 onChange={(e) => setFormData({...formData, priority: e.target.value})}
-                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs"
               >
                 {options.priorities.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
               </select>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Issue Date *</label>
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Issue Date *</label>
               <input 
                 type="date"
                 value={formData.issue_date}
                 onChange={(e) => setFormData({...formData, issue_date: e.target.value})}
-                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs"
               />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Assigned To *</label>
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Assigned To *</label>
               <select 
                 value={formData.assigned_person}
                 onChange={(e) => setFormData({...formData, assigned_person: e.target.value})}
-                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs"
               >
                 {options.assignedPersons.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
               </select>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Status *</label>
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status *</label>
               <select 
                 value={formData.status}
                 onChange={(e) => setFormData({...formData, status: e.target.value})}
-                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs"
               >
                 {options.statuses.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
               </select>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Issue Details *</label>
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Issue Details *</label>
             <textarea 
-              rows={4}
+              rows={3}
               value={formData.issue_details}
               onChange={(e) => setFormData({...formData, issue_details: e.target.value})}
               placeholder="Provide a thorough description of the issue..."
-              className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white resize-none"
+              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white resize-none text-xs"
             />
           </div>
 
           <button 
             type="submit"
             disabled={isLoading}
-            className="w-full py-4 gradient-bg text-white font-bold rounded-xl shadow-lg hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full py-2.5 gradient-bg text-white font-bold rounded-lg shadow-md hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-xs"
           >
             {isLoading ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : 'Submit Issue Report'}
           </button>
         </form>
