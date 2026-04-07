@@ -26,6 +26,8 @@ const Dashboard: React.FC = () => {
   const [downtime, setDowntime] = useState<SystemDowntime[]>([]);
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
   const [selectedMonth, setSelectedMonth] = useState<string>(String(new Date().getMonth() + 1).padStart(2, '0'));
+  const [frequentReportersPage, setFrequentReportersPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -56,6 +58,10 @@ const Dashboard: React.FC = () => {
   const monthKey = selectedMonth ? `${selectedYear}-${selectedMonth}` : '';
   const currentMonthlyEntry = monthlyEntries.find(e => e.month === monthKey);
 
+  useEffect(() => {
+    setFrequentReportersPage(1);
+  }, [selectedYear, selectedMonth]);
+
   // Metrics
   const stats = [
     { label: 'Total Issues', value: currentMonthlyEntry?.total_issues || filteredIssues.length, icon: AlertCircle, color: 'text-indigo-600', bg: 'bg-indigo-100 dark:bg-indigo-900/20' },
@@ -80,6 +86,12 @@ const Dashboard: React.FC = () => {
   const frequentCompanies = Object.entries(companyCounts)
     .filter(([, count]) => (count as number) >= 2)
     .sort((a, b) => (b[1] as number) - (a[1] as number));
+
+  const totalFrequentPages = Math.ceil(frequentCompanies.length / itemsPerPage);
+  const paginatedFrequentCompanies = frequentCompanies.slice(
+    (frequentReportersPage - 1) * itemsPerPage,
+    frequentReportersPage * itemsPerPage
+  );
 
   // Chart Data
   const issueTypeData = [
@@ -168,10 +180,12 @@ const Dashboard: React.FC = () => {
             <span className="text-[10px] px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full font-bold uppercase">Critical</span>
           </div>
           <div className="space-y-4">
-            {frequentCompanies.length > 0 ? frequentCompanies.map(([name, count], i) => (
+            {paginatedFrequentCompanies.length > 0 ? paginatedFrequentCompanies.map(([name, count], i) => (
               <div key={name} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-900 flex items-center justify-center text-xs font-bold text-slate-400">#{i+1}</div>
+                  <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-900 flex items-center justify-center text-xs font-bold text-slate-400">
+                    #{(frequentReportersPage - 1) * itemsPerPage + i + 1}
+                  </div>
                   <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{name}</span>
                 </div>
                 <div className="flex items-center gap-1.5 px-2 py-1 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-lg text-xs font-bold">
@@ -185,6 +199,28 @@ const Dashboard: React.FC = () => {
               </div>
             )}
           </div>
+
+          {totalFrequentPages > 1 && (
+            <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <button
+                onClick={() => setFrequentReportersPage(p => Math.max(1, p - 1))}
+                disabled={frequentReportersPage === 1}
+                className="px-3 py-1 text-xs font-bold text-slate-500 hover:text-indigo-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                Previous
+              </button>
+              <span className="text-[10px] font-bold text-slate-400 uppercase">
+                Page {frequentReportersPage} of {totalFrequentPages}
+              </span>
+              <button
+                onClick={() => setFrequentReportersPage(p => Math.min(totalFrequentPages, p + 1))}
+                disabled={frequentReportersPage === totalFrequentPages}
+                className="px-3 py-1 text-xs font-bold text-slate-500 hover:text-indigo-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Issue Distribution Pie */}
