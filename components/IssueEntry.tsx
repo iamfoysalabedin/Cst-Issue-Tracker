@@ -85,24 +85,24 @@ const IssueEntry: React.FC = () => {
         return; // Stop if Supabase fails
       }
 
-      // 2. Save to Google Sheets via backend API
+      // 2. Save to Google Sheets directly from frontend
       if (supabaseSuccess) {
         try {
-          const response = await fetch('/api/google-sheets/append', {
+          const googleSheetUrl = 'https://script.google.com/macros/s/AKfycbxCB_bSRrMg70OaBJpM--XOPqZayWzwQtJ8gh1tZOscmqwXSmrdJ8YQwwvYXSExAksz/exec';
+          
+          // Using no-cors mode for Google Apps Script if needed, but standard fetch usually works for doPost
+          await fetch(googleSheetUrl, {
             method: 'POST',
+            mode: 'no-cors', // Google Apps Script requires no-cors or handles it via redirect
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify(formData),
           });
           
-          if (!response.ok) {
-            const errorData = await response.json();
-            console.warn('Google Sheets Sync Warning:', errorData.error);
-            // We don't block the UI if Google Sheets fails but Supabase succeeded
-          }
+          console.log('Google Sheets sync triggered');
         } catch (gsError) {
-          console.error('Google Sheets API Error:', gsError);
+          console.error('Google Sheets Sync Error:', gsError);
         }
       }
 
