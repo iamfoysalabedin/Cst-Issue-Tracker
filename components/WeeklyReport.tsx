@@ -240,6 +240,60 @@ const WeeklyReport: React.FC = () => {
         ))}
       </div>
 
+      {/* Downtime Table */}
+      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+          <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Activity size={18} className="text-fuchsia-500" />
+            System Downtime Report in Range
+          </h3>
+          <span className="text-xs font-bold px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-full">
+            {filteredDowntime.length} Results
+          </span>
+        </div>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
+                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">System Name</th>
+                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Start Time</th>
+                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">End Time</th>
+                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Duration</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              {filteredDowntime.length > 0 ? filteredDowntime.map(d => (
+                <tr key={d.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                  <td className="px-6 py-4 text-sm font-bold text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                    {d.date}
+                  </td>
+                  <td className="px-6 py-4 text-sm font-bold text-slate-900 dark:text-white">
+                    {d.system_name}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">
+                    {d.start_time}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">
+                    {d.end_time}
+                  </td>
+                  <td className="px-6 py-4 text-sm font-bold text-fuchsia-600">
+                    {d.duration_minutes} min
+                  </td>
+                </tr>
+              )) : (
+                <tr>
+                  <td colSpan={5} className="px-6 py-10 text-center text-slate-400 italic">
+                    No downtime entries found in this date range.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       {/* Issues Table */}
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
