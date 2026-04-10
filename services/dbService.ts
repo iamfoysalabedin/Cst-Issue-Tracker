@@ -123,14 +123,22 @@ export const dbService = {
   },
 
   async saveIssue(issue: Omit<Issue, 'id' | 'created_at' | 'updated_at'>): Promise<Issue> {
+    console.log('Attempting to save issue to Supabase:', issue);
     const { data, error } = await supabase
       .from('issues')
       .insert([issue])
-      .select()
-      .single();
+      .select();
     
-    if (error) throw error;
-    return data as Issue;
+    if (error) {
+      console.error('Supabase Insert Error:', error);
+      throw error;
+    }
+    if (!data || data.length === 0) {
+      console.error('Supabase Insert returned no data');
+      throw new Error('No data returned from Supabase after insert');
+    }
+    console.log('Successfully saved to Supabase:', data[0]);
+    return data[0] as Issue;
   },
 
   async updateIssue(id: string, updates: Partial<Issue>): Promise<Issue> {

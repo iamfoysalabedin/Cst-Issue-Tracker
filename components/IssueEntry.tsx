@@ -42,6 +42,7 @@ const IssueEntry: React.FC = () => {
       dbService.getSettingsByCategory('status'),
       dbService.getSettingsByCategory('assigned_person'),
     ]);
+
     setOptions({
       issueTypes: it,
       priorities: pr,
@@ -72,7 +73,39 @@ const IssueEntry: React.FC = () => {
     }
 
     try {
-      await dbService.saveIssue(formData);
+      // 1. Save to Supabase
+      let supabaseSuccess = false;
+      try {
+        await dbService.saveIssue(formData);
+        supabaseSuccess = true;
+      } catch (sbError: any) {
+        console.error('Supabase Save Error:', sbError);
+        setError(`Supabase Error: ${sbError.message || 'Failed to save to database'}`);
+        setIsLoading(false);
+        return; // Stop if Supabase fails
+      }
+
+      // 2. Save to Google Sheets via backend API
+      if (supabaseSuccess) {
+        try {
+          const response = await fetch('/api/google-sheets/append', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData),
+          });
+          
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.warn('Google Sheets Sync Warning:', errorData.error);
+            // We don't block the UI if Google Sheets fails but Supabase succeeded
+          }
+        } catch (gsError) {
+          console.error('Google Sheets API Error:', gsError);
+        }
+      }
+
       setSuccess(true);
       setFormData(prev => ({
         ...prev,
@@ -80,8 +113,8 @@ const IssueEntry: React.FC = () => {
         issue_details: '',
       }));
       setTimeout(() => setSuccess(false), 3000);
-    } catch (err) {
-      setError('Failed to save issue. Please try again.');
+    } catch (err: any) {
+      setError(`Error: ${err.message || 'An unexpected error occurred'}`);
     } finally {
       setIsLoading(false);
     }
