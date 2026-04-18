@@ -30,10 +30,19 @@ const Analytics: React.FC = () => {
     loadData();
   }, []);
 
-  // Process data for the selected year
+  // Process data for the selected year using robust date parsing
   const yearlyIssues = issues.filter(issue => {
     const dateStr = issue.issue_date || issue.created_at;
-    if (typeof dateStr !== 'string') return false;
+    if (!dateStr || typeof dateStr !== 'string') return false;
+    
+    // Fallback to startsWith only if it's a direct date string, otherwise try to extract year
+    if (dateStr.includes('-')) {
+      const parts = dateStr.split('-');
+      // Check if YYYY-MM-DD or DD-MM-YYYY
+      if (parts[0].length === 4) return parts[0] === selectedYear;
+      if (parts[2] && parts[2].substring(0, 4) === selectedYear) return true;
+    }
+    
     return dateStr.startsWith(selectedYear);
   });
 
@@ -46,23 +55,30 @@ const Analytics: React.FC = () => {
 
   // Aggregate by assigned person for the selected month
   const monthlyStats = monthlyIssues.reduce((acc, issue) => {
-    const person = issue.assigned_person || 'Unassigned';
+    const person = (issue.assigned_person || 'Unassigned').trim();
     acc[person] = (acc[person] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
   const monthlyRanking = Object.entries(monthlyStats)
+    .filter(([name]) => name !== 'Unassigned') // Exclude Unassigned from leaderboard
     .map(([name, count]) => ({ name, count: count as number }))
     .sort((a, b) => b.count - a.count);
 
   // Aggregate by assigned person for the selected year
   const yearlyStats = yearlyIssues.reduce((acc, issue) => {
-    const person = issue.assigned_person || 'Unassigned';
+    const person = (issue.assigned_person || 'Unassigned').trim();
     acc[person] = (acc[person] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
   const yearlyRanking = Object.entries(yearlyStats)
+    .filter(([name]) => name !== 'Unassigned') // Exclude Unassigned from leaderboard
+    .map(([name, count]) => ({ name, count: count as number }))
+    .sort((a, b) => b.count - a.count);
+
+  // Aggregate Yearly Distribution data (include Unassigned here but maybe separate it?)
+  const yearlyDistributionData = Object.entries(yearlyStats)
     .map(([name, count]) => ({ name, count: count as number }))
     .sort((a, b) => b.count - a.count);
 
@@ -122,11 +138,11 @@ const Analytics: React.FC = () => {
             <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 rounded-2xl flex items-center justify-center mb-4">
               <Users size={24} />
             </div>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Active Assignees</p>
-            <h3 className="text-3xl font-bold text-slate-900 dark:text-white mt-1">{Object.keys(monthlyStats).length}</h3>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Yearly Issues</p>
+            <h3 className="text-3xl font-bold text-slate-900 dark:text-white mt-1">{yearlyIssues.length}</h3>
             <p className="text-xs text-slate-500 mt-2 flex items-center gap-1">
-              <TrendingUp size={14} className="text-emerald-500" />
-              In {months[parseInt(selectedMonth) - 1]} {selectedYear}
+              <Calendar size={14} className="text-indigo-500" />
+              In {selectedYear}
             </p>
           </div>
         </div>
@@ -213,7 +229,7 @@ const Analytics: React.FC = () => {
           <h3 className="font-bold text-slate-900 dark:text-white mb-8">Yearly Distribution ({selectedYear})</h3>
           <div className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={yearlyRanking} layout="vertical" margin={{ left: 40 }}>
+              <BarChart data={yearlyDistributionData} layout="vertical" margin={{ left: 40 }}>
                 <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e2e8f0" />
                 <XAxis type="number" hide />
                 <YAxis 
