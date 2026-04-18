@@ -12,6 +12,8 @@ const IssueReports: React.FC = () => {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [selectedMonth, setSelectedMonth] = useState('');
+  const [assignedFilter, setAssignedFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [editingIssue, setEditingIssue] = useState<Issue | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(50);
@@ -206,6 +208,8 @@ const IssueReports: React.FC = () => {
     setFromDate('');
     setToDate('');
     setSelectedMonth('');
+    setAssignedFilter('');
+    setStatusFilter('');
     setCurrentPage(1);
   };
 
@@ -226,7 +230,10 @@ const IssueReports: React.FC = () => {
       matchesMonth = issueDateObj.getFullYear() === year && (issueDateObj.getMonth() + 1) === month;
     }
 
-    return matchesSearch && matchesFromDate && matchesToDate && matchesMonth;
+    const matchesAssigned = assignedFilter ? issue.assigned_person === assignedFilter : true;
+    const matchesStatus = statusFilter ? issue.status === statusFilter : true;
+
+    return matchesSearch && matchesFromDate && matchesToDate && matchesMonth && matchesAssigned && matchesStatus;
   });
 
   const totalPages = Math.ceil(filteredIssues.length / itemsPerPage);
@@ -274,6 +281,30 @@ const IssueReports: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-1.5 border-l border-slate-200 dark:border-slate-800 pl-2">
+            <span className="text-[10px] font-bold text-slate-400 uppercase">Assigned:</span>
+            <select 
+              value={assignedFilter}
+              onChange={(e) => setAssignedFilter(e.target.value)}
+              className="px-2 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="">All</option>
+              {options.assignedPersons.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-1.5 border-l border-slate-200 dark:border-slate-800 pl-2">
+            <span className="text-[10px] font-bold text-slate-400 uppercase">Status:</span>
+            <select 
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-2 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="">All</option>
+              {options.statuses.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-1.5 border-l border-slate-200 dark:border-slate-800 pl-2">
             <input 
               type="date"
               value={fromDate}
@@ -289,7 +320,7 @@ const IssueReports: React.FC = () => {
             />
           </div>
 
-          {(search || selectedMonth || fromDate || toDate) && (
+          {(search || selectedMonth || fromDate || toDate || assignedFilter || statusFilter) && (
             <button 
               onClick={clearFilters}
               className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-lg text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center gap-1.5 animate-in fade-in zoom-in-95 duration-200"
