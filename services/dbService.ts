@@ -249,6 +249,18 @@ export const dbService = {
       .eq('id', id);
     
     if (error) throw error;
+  },
+
+  async updateDowntime(id: string, updates: Partial<SystemDowntime>): Promise<SystemDowntime> {
+    const { data, error } = await supabase
+      .from('system_downtime')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as SystemDowntime;
   }
 };
 

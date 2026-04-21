@@ -69,11 +69,11 @@ const Dashboard: React.FC = () => {
     { label: 'Device Issues', value: currentMonthlyEntry?.device_issues || filteredIssues.filter(i => i.issue_type === 'Device Issues').length, icon: Smartphone, color: 'text-amber-600', bg: 'bg-amber-100 dark:bg-amber-900/20' },
     { label: 'Awareness', value: currentMonthlyEntry?.awareness || filteredIssues.filter(i => i.issue_type === 'Awareness').length, icon: Lightbulb, color: 'text-emerald-600', bg: 'bg-emerald-100 dark:bg-emerald-900/20' },
     { label: 'Help Requests', value: currentMonthlyEntry?.help_requests || filteredIssues.filter(i => i.issue_type === 'Help Requests').length, icon: HelpCircle, color: 'text-sky-600', bg: 'bg-sky-100 dark:bg-sky-900/20' },
-    { label: 'System Downtime', value: `${(downtime.filter(d => {
+    { label: 'System Downtime', value: `${downtime.filter(d => {
       if (typeof d.date !== 'string') return false;
       const [y, m] = d.date.split('-');
       return y === selectedYear && (selectedMonth ? m === selectedMonth : true);
-    }).reduce((acc, d) => acc + d.duration_minutes, 0) / 60).toFixed(1)}h`, icon: Activity, color: 'text-fuchsia-600', bg: 'bg-fuchsia-100 dark:bg-fuchsia-900/20' },
+    }).reduce((acc, d) => acc + d.duration_minutes, 0)} min`, icon: Activity, color: 'text-fuchsia-600', bg: 'bg-fuchsia-100 dark:bg-fuchsia-900/20' },
   ];
 
   // Frequent Issue Companies

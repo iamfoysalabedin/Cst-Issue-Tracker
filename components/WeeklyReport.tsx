@@ -79,7 +79,6 @@ const WeeklyReport: React.FC = () => {
   });
 
   const totalDowntimeMinutes = filteredDowntime.reduce((acc, d) => acc + d.duration_minutes, 0);
-  const totalDowntimeHours = (totalDowntimeMinutes / 60).toFixed(1);
 
   const stats = [
     { label: 'Total Issues', value: filteredIssues.length, icon: AlertCircle, color: 'text-indigo-600', bg: 'bg-indigo-100 dark:bg-indigo-900/20' },
@@ -87,7 +86,7 @@ const WeeklyReport: React.FC = () => {
     { label: 'Device Issues', value: filteredIssues.filter(i => i.issue_type === 'Device Issues').length, icon: Smartphone, color: 'text-amber-600', bg: 'bg-amber-100 dark:bg-amber-900/20' },
     { label: 'Awareness', value: filteredIssues.filter(i => i.issue_type === 'Awareness').length, icon: Lightbulb, color: 'text-emerald-600', bg: 'bg-emerald-100 dark:bg-emerald-900/20' },
     { label: 'Help Requests', value: filteredIssues.filter(i => i.issue_type === 'Help Requests').length, icon: HelpCircle, color: 'text-sky-600', bg: 'bg-sky-100 dark:bg-sky-900/20' },
-    { label: 'System Downtime', value: `${totalDowntimeHours}h`, icon: Activity, color: 'text-fuchsia-600', bg: 'bg-fuchsia-100 dark:bg-fuchsia-900/20' },
+    { label: 'System Downtime', value: `${totalDowntimeMinutes} min`, icon: Activity, color: 'text-fuchsia-600', bg: 'bg-fuchsia-100 dark:bg-fuchsia-900/20' },
   ];
 
   const statusStats = [
