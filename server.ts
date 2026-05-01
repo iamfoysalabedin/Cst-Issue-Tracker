@@ -17,7 +17,7 @@ async function startServer() {
   app.post('/api/google-sheets/append', async (req, res) => {
     try {
       // UPDATE THIS URL AFTER NEW DEPLOYMENT (OR USE ENV VAR)
-      const webappUrl = process.env.GOOGLE_SHEET_WEBAPP_URL || 'https://script.google.com/macros/s/AKfycbw-CopylhempftgIEvGVgHMLDJSzh604NAZ_04_3XeCk4LPusLDtJnJTS08IgjEL7BQ/exec';
+      const webappUrl = process.env.GOOGLE_SHEET_WEBAPP_URL || 'https://script.google.com/macros/s/AKfycbwK9hMzL_zIa_9rmuzGCKhSjkr9xooa_PsmXB9hk1bb1XVprlNlLEUuJha5r6-2i9Yd/exec';
       
       const response = await fetch(webappUrl, {
         method: 'POST',
