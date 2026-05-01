@@ -13,6 +13,7 @@ const IssueReports: React.FC = () => {
   const [toDate, setToDate] = useState('');
   const [selectedMonth, setSelectedMonth] = useState('');
   const [assignedFilter, setAssignedFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [editingIssue, setEditingIssue] = useState<Issue | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -24,11 +25,13 @@ const IssueReports: React.FC = () => {
   const [options, setOptions] = useState<{
     issueTypes: SettingItem[];
     priorities: SettingItem[];
+    categories: SettingItem[];
     statuses: SettingItem[];
     assignedPersons: SettingItem[];
   }>({
     issueTypes: [],
     priorities: [],
+    categories: [],
     statuses: [],
     assignedPersons: [],
   });
@@ -39,15 +42,17 @@ const IssueReports: React.FC = () => {
   }, []);
 
   const loadOptions = async () => {
-    const [it, pr, st, ap] = await Promise.all([
+    const [it, pr, st, ap, cat] = await Promise.all([
       dbService.getSettingsByCategory('issue_type'),
       dbService.getSettingsByCategory('priority'),
       dbService.getSettingsByCategory('status'),
       dbService.getSettingsByCategory('assigned_person'),
+      dbService.getSettingsByCategory('issue_category'),
     ]);
     setOptions({
       issueTypes: it,
       priorities: pr,
+      categories: cat,
       statuses: st,
       assignedPersons: ap,
     });
@@ -151,6 +156,7 @@ const IssueReports: React.FC = () => {
         const newIssues = data.map(row => ({
           client_name: row['Client Name'] || row['client_name'] || 'Unknown',
           issue_type: normalizeType(row['Issue Type'] || row['issue_type']),
+          category: row['Category'] || row['category'] || '',
           priority: row['Priority'] || row['priority'] || 'Medium',
           status: row['Status'] || row['status'] || 'Open',
           assigned_person: row['Assigned To'] || row['assigned_person'] || 'Unassigned',
@@ -181,6 +187,7 @@ const IssueReports: React.FC = () => {
       {
         'Client Name': 'Sample Client',
         'Issue Type': 'System Bugs',
+        'Category': 'Hardware',
         'Priority': 'High',
         'Status': 'Open',
         'Assigned To': 'Fuad',
@@ -231,18 +238,19 @@ const IssueReports: React.FC = () => {
     }
 
     const matchesAssigned = assignedFilter ? issue.assigned_person === assignedFilter : true;
+    const matchesCategory = categoryFilter ? issue.category === categoryFilter : true;
     const matchesStatus = statusFilter ? issue.status === statusFilter : true;
 
-    return matchesSearch && matchesFromDate && matchesToDate && matchesMonth && matchesAssigned && matchesStatus;
+    return matchesSearch && matchesFromDate && matchesToDate && matchesMonth && matchesAssigned && matchesCategory && matchesStatus;
   });
 
   const totalPages = Math.ceil(filteredIssues.length / itemsPerPage);
   const currentIssues = filteredIssues.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const exportCSV = () => {
-    const headers = ['ID', 'Client', 'Type', 'Priority', 'Status', 'Assigned', 'Issue Date', 'Created At'];
+    const headers = ['ID', 'Client', 'Type', 'Category', 'Priority', 'Status', 'Assigned', 'Issue Date', 'Created At'];
     const rows = filteredIssues.map(i => [
-      i.id, i.client_name, i.issue_type, i.priority, i.status, i.assigned_person, i.issue_date || new Date(i.created_at).toLocaleDateString(), new Date(i.created_at).toLocaleDateString()
+      i.id, i.client_name, i.issue_type, i.category, i.priority, i.status, i.assigned_person, i.issue_date || new Date(i.created_at).toLocaleDateString(), new Date(i.created_at).toLocaleDateString()
     ]);
     const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].map(e => e.join(",")).join("\n");
     const encodedUri = encodeURI(csvContent);
@@ -289,6 +297,42 @@ const IssueReports: React.FC = () => {
             >
               <option value="">All</option>
               {options.assignedPersons.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-1.5 border-l border-slate-200 dark:border-slate-800 pl-2">
+            <span className="text-[10px] font-bold text-slate-400 uppercase">Status:</span>
+            <select 
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-2 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="">All</option>
+              {options.statuses.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-1.5 border-l border-slate-200 dark:border-slate-800 pl-2">
+            <span className="text-[10px] font-bold text-slate-400 uppercase">Assigned:</span>
+            <select 
+              value={assignedFilter}
+              onChange={(e) => setAssignedFilter(e.target.value)}
+              className="px-2 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="">All</option>
+              {options.assignedPersons.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-1.5 border-l border-slate-200 dark:border-slate-800 pl-2">
+            <span className="text-[10px] font-bold text-slate-400 uppercase">Category:</span>
+            <select 
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="px-2 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="">All</option>
+              {options.categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
             </select>
           </div>
 
@@ -390,6 +434,7 @@ const IssueReports: React.FC = () => {
                 </th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Client</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Type</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Category</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Priority</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Assigned</th>
@@ -413,6 +458,9 @@ const IssueReports: React.FC = () => {
                     <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-md font-medium">
                       {issue.issue_type}
                     </span>
+                  </td>
+                  <td className="px-4 py-2.5 text-[10px] font-medium text-slate-600 dark:text-slate-400">
+                    {issue.category}
                   </td>
                   <td className="px-4 py-2.5">
                     <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase border ${(PRIORITY_COLORS as any)[issue.priority] || 'bg-slate-100'}`}>
@@ -524,6 +572,16 @@ const IssueReports: React.FC = () => {
                     className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white text-xs"
                   >
                     {options.issueTypes.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Category</label>
+                  <select 
+                    value={editingIssue.category}
+                    onChange={(e) => setEditingIssue({...editingIssue, category: e.target.value})}
+                    className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white text-xs"
+                  >
+                    {options.categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
                   </select>
                 </div>
                 <div className="space-y-1">

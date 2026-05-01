@@ -8,6 +8,7 @@ const IssueEntry: React.FC = () => {
   const [formData, setFormData] = useState({
     client_name: '',
     issue_type: '',
+    category: '',
     priority: '',
     status: 'Open',
     assigned_person: '',
@@ -17,11 +18,13 @@ const IssueEntry: React.FC = () => {
 
   const [options, setOptions] = useState<{
     issueTypes: SettingItem[];
+    categories: SettingItem[];
     priorities: SettingItem[];
     statuses: SettingItem[];
     assignedPersons: SettingItem[];
   }>({
     issueTypes: [],
+    categories: [],
     priorities: [],
     statuses: [],
     assignedPersons: [],
@@ -36,15 +39,17 @@ const IssueEntry: React.FC = () => {
   }, []);
 
   const loadOptions = async () => {
-    const [it, pr, st, ap] = await Promise.all([
+    const [it, pr, st, ap, cat] = await Promise.all([
       dbService.getSettingsByCategory('issue_type'),
       dbService.getSettingsByCategory('priority'),
       dbService.getSettingsByCategory('status'),
       dbService.getSettingsByCategory('assigned_person'),
+      dbService.getSettingsByCategory('issue_category'),
     ]);
 
     setOptions({
       issueTypes: it,
+      categories: cat,
       priorities: pr,
       statuses: st,
       assignedPersons: ap,
@@ -53,6 +58,7 @@ const IssueEntry: React.FC = () => {
     setFormData(prev => ({
       ...prev,
       issue_type: '',
+      category: cat[0]?.name || '',
       priority: pr[0]?.name || '',
       status: st[0]?.name || 'Open',
       assigned_person: ap[0]?.name || '',
@@ -66,7 +72,7 @@ const IssueEntry: React.FC = () => {
     setSuccess(false);
 
     // Simple validation
-    if (!formData.client_name || !formData.issue_details || !formData.issue_type || !formData.priority || !formData.assigned_person || !formData.issue_date) {
+    if (!formData.client_name || !formData.issue_details || !formData.issue_type || !formData.category || !formData.priority || !formData.assigned_person || !formData.issue_date) {
       setError('Please fill in all required fields.');
       setIsLoading(false);
       return;
@@ -88,9 +94,9 @@ const IssueEntry: React.FC = () => {
       // 2. Save to Google Sheets directly from frontend
       if (supabaseSuccess) {
         try {
-          const googleSheetUrl = 'https://script.google.com/macros/s/AKfycbxCB_bSRrMg70OaBJpM--XOPqZayWzwQtJ8gh1tZOscmqwXSmrdJ8YQwwvYXSExAksz/exec';
+          // UPDATE THIS URL AFTER NEW DEPLOYMENT
+          const googleSheetUrl = 'https://script.google.com/macros/s/AKfycbzzNUbL_bD2NfLY-92V3hJA-XH3DP6CnkRbNmhpoRvCyS6WgF05YF5WqejztCOc_W5f/exec';
           
-          // Using no-cors mode for Google Apps Script if needed, but standard fetch usually works for doPost
           await fetch(googleSheetUrl, {
             method: 'POST',
             mode: 'no-cors', // Google Apps Script requires no-cors or handles it via redirect
@@ -167,6 +173,18 @@ const IssueEntry: React.FC = () => {
                 <option value="Device Issues">Device Issues</option>
                 <option value="Awareness">Awareness</option>
                 <option value="Help Requests">Help Requests</option>
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Category *</label>
+              <select 
+                value={formData.category}
+                onChange={(e) => setFormData({...formData, category: e.target.value})}
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs"
+              >
+                <option value="">Select Category</option>
+                {options.categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
               </select>
             </div>
 

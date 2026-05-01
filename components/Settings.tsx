@@ -5,6 +5,7 @@ import { SettingItem } from '../types';
 import { Plus, Trash2, Settings as SettingsIcon, Edit2, Check, X } from 'lucide-react';
 
 const CATEGORIES: { id: SettingItem['category']; label: string }[] = [
+  { id: 'issue_category', label: 'Categories' },
   { id: 'priority', label: 'Priorities' },
   { id: 'status', label: 'Statuses' },
   { id: 'assigned_person', label: 'Assigned Persons' },
@@ -13,7 +14,7 @@ const CATEGORIES: { id: SettingItem['category']; label: string }[] = [
 
 const Settings: React.FC = () => {
   const [settings, setSettings] = useState<SettingItem[]>([]);
-  const [activeCategory, setActiveCategory] = useState<SettingItem['category']>('priority');
+  const [activeCategory, setActiveCategory] = useState<SettingItem['category']>('issue_category');
   const [newName, setNewName] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');

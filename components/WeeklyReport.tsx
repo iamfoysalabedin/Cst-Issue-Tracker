@@ -98,9 +98,9 @@ const WeeklyReport: React.FC = () => {
   const currentIssues = filteredIssues.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const exportCSV = () => {
-    const headers = ['Date', 'Client', 'Type', 'Priority', 'Status', 'Assigned', 'Details'];
+    const headers = ['Date', 'Client', 'Type', 'Category', 'Priority', 'Status', 'Assigned', 'Details'];
     const rows = filteredIssues.map(i => [
-      i.issue_date, i.client_name, i.issue_type, i.priority, i.status, i.assigned_person, i.issue_details.replace(/,/g, ';')
+      i.issue_date, i.client_name, i.issue_type, i.category, i.priority, i.status, i.assigned_person, i.issue_details.replace(/,/g, ';')
     ]);
     const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].map(e => e.join(",")).join("\n");
     const encodedUri = encodeURI(csvContent);
@@ -312,6 +312,7 @@ const WeeklyReport: React.FC = () => {
                 <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
                 <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Client</th>
                 <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Type</th>
+                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Category</th>
                 <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Priority</th>
                 <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
                 <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Assigned</th>
@@ -331,6 +332,9 @@ const WeeklyReport: React.FC = () => {
                     <span className="text-[10px] px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-md font-bold uppercase">
                       {issue.issue_type}
                     </span>
+                  </td>
+                  <td className="px-6 py-4 text-sm font-bold text-slate-600 dark:text-slate-400">
+                    {issue.category}
                   </td>
                   <td className="px-6 py-4">
                     <span className={`text-[10px] px-2 py-1 rounded-full font-black uppercase border ${(PRIORITY_COLORS as any)[issue.priority] || 'bg-slate-100'}`}>

@@ -16,7 +16,8 @@ async function startServer() {
   // Google Sheets API Endpoint to append issue
   app.post('/api/google-sheets/append', async (req, res) => {
     try {
-      const webappUrl = process.env.GOOGLE_SHEET_WEBAPP_URL || 'https://script.google.com/macros/s/AKfycbxCB_bSRrMg70OaBJpM--XOPqZayWzwQtJ8gh1tZOscmqwXSmrdJ8YQwwvYXSExAksz/exec';
+      // UPDATE THIS URL AFTER NEW DEPLOYMENT (OR USE ENV VAR)
+      const webappUrl = process.env.GOOGLE_SHEET_WEBAPP_URL || 'https://script.google.com/macros/s/AKfycbzzNUbL_bD2NfLY-92V3hJA-XH3DP6CnkRbNmhpoRvCyS6WgF05YF5WqejztCOc_W5f/exec';
       
       const response = await fetch(webappUrl, {
         method: 'POST',

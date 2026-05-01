@@ -26,6 +26,9 @@ const INITIAL_SETTINGS: Omit<SettingItem, 'id' | 'created_at'>[] = [
   { category: 'system_name', name: 'APP' },
   { category: 'system_name', name: 'BEP' },
   { category: 'system_name', name: 'ALL WITHOUT BEP' },
+  { category: 'issue_category', name: 'Software' },
+  { category: 'issue_category', name: 'Hardware' },
+  { category: 'issue_category', name: 'Network' },
 ];
 
 export const dbService = {
