@@ -95,7 +95,7 @@ const IssueEntry: React.FC = () => {
       if (supabaseSuccess) {
         try {
           // UPDATE THIS URL AFTER NEW DEPLOYMENT
-          const googleSheetUrl = 'https://script.google.com/macros/s/AKfycbzzNUbL_bD2NfLY-92V3hJA-XH3DP6CnkRbNmhpoRvCyS6WgF05YF5WqejztCOc_W5f/exec';
+          const googleSheetUrl = 'https://script.google.com/macros/s/AKfycbw-CopylhempftgIEvGVgHMLDJSzh604NAZ_04_3XeCk4LPusLDtJnJTS08IgjEL7BQ/exec';
           
           await fetch(googleSheetUrl, {
             method: 'POST',
