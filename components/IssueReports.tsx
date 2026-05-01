@@ -301,30 +301,6 @@ const IssueReports: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-1.5 border-l border-slate-200 dark:border-slate-800 pl-2">
-            <span className="text-[10px] font-bold text-slate-400 uppercase">Status:</span>
-            <select 
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-2 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value="">All</option>
-              {options.statuses.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
-            </select>
-          </div>
-
-          <div className="flex items-center gap-1.5 border-l border-slate-200 dark:border-slate-800 pl-2">
-            <span className="text-[10px] font-bold text-slate-400 uppercase">Assigned:</span>
-            <select 
-              value={assignedFilter}
-              onChange={(e) => setAssignedFilter(e.target.value)}
-              className="px-2 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value="">All</option>
-              {options.assignedPersons.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
-            </select>
-          </div>
-
-          <div className="flex items-center gap-1.5 border-l border-slate-200 dark:border-slate-800 pl-2">
             <span className="text-[10px] font-bold text-slate-400 uppercase">Category:</span>
             <select 
               value={categoryFilter}
