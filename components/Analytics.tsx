@@ -225,31 +225,63 @@ const Analytics: React.FC = () => {
         </div>
 
         {/* Yearly Distribution Chart */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm p-6">
-          <h3 className="font-bold text-slate-900 dark:text-white mb-8">Yearly Distribution ({selectedYear})</h3>
+        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-lg p-8 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-indigo-500/10 transition-all duration-700" />
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h3 className="font-bold text-slate-900 dark:text-white text-xl">Yearly Performance</h3>
+              <p className="text-sm text-slate-500">Distribution across {selectedYear}</p>
+            </div>
+            <div className="bg-indigo-50 dark:bg-indigo-900/20 px-3 py-1 rounded-full text-indigo-600 dark:text-indigo-400 text-xs font-bold uppercase tracking-wider">
+              Cumulative Data
+            </div>
+          </div>
           <div className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={yearlyDistributionData} layout="vertical" margin={{ left: 40 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e2e8f0" />
+              <BarChart data={yearlyDistributionData} layout="vertical" margin={{ left: 60, right: 40, bottom: 20 }}>
+                <defs>
+                  {CHART_COLORS.map((color, i) => (
+                    <linearGradient key={`gradient-${i}`} id={`barGradient-${i}`} x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor={color} stopOpacity={0.8} />
+                      <stop offset="100%" stopColor={color} stopOpacity={1} />
+                    </linearGradient>
+                  ))}
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e2e8f0" strokeOpacity={0.5} />
                 <XAxis type="number" hide />
                 <YAxis 
                   dataKey="name" 
                   type="category" 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fontSize: 12, fontWeight: 600, fill: '#64748b' }}
+                  tick={{ fontSize: 13, fontWeight: 600, fill: '#475569' }}
                 />
                 <Tooltip 
-                  cursor={{ fill: 'rgba(99, 102, 241, 0.05)' }}
-                  contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '12px', color: '#fff' }}
+                  cursor={{ fill: 'rgba(99, 102, 241, 0.05)', radius: [0, 8, 8, 0] }}
+                  contentStyle={{ 
+                    backgroundColor: '#1e293b', 
+                    border: 'none', 
+                    borderRadius: '16px', 
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                    padding: '12px 16px'
+                  }}
+                  itemStyle={{ color: '#fff', fontWeight: 700 }}
+                  labelStyle={{ color: '#94a3b8', marginBottom: '4px', fontSize: '12px' }}
                 />
                 <Bar 
                   dataKey="count" 
-                  fill="#6366f1" 
-                  radius={[0, 8, 8, 0]} 
-                  barSize={24}
-                  label={{ position: 'right', fontSize: 12, fontWeight: 700, fill: '#6366f1' }}
-                />
+                  radius={[0, 10, 10, 0]} 
+                  barSize={28}
+                  animationDuration={1500}
+                >
+                  {yearlyDistributionData.map((entry, index) => (
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={`url(#barGradient-${index % CHART_COLORS.length})`}
+                      className="transition-all duration-300 hover:opacity-80"
+                    />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
