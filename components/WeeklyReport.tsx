@@ -45,6 +45,16 @@ const WeeklyReport: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(50);
 
+  const formatTo12h = (time24: string) => {
+    if (!time24) return '';
+    const [hours, minutes] = time24.split(':');
+    let h = parseInt(hours);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12;
+    h = h ? h : 12; // the hour '0' should be '12'
+    return `${h}:${minutes} ${ampm}`;
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       const [i, d] = await Promise.all([
@@ -272,10 +282,10 @@ const WeeklyReport: React.FC = () => {
                     {d.system_name}
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">
-                    {d.start_time}
+                    {formatTo12h(d.start_time)}
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">
-                    {d.end_time}
+                    {formatTo12h(d.end_time)}
                   </td>
                   <td className="px-6 py-4 text-sm font-bold text-fuchsia-600">
                     {d.duration_minutes} min
