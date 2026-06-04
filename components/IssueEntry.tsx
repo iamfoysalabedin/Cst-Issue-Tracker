@@ -4,6 +4,35 @@ import { dbService } from '../services/dbService';
 import { SettingItem } from '../types';
 import { CheckCircle, AlertCircle } from 'lucide-react';
 
+const convert24hTo12h = (time24: string): string => {
+  if (!time24) return '';
+  const parts = time24.split(':');
+  if (parts.length < 2) return time24;
+  let hours = parseInt(parts[0], 10);
+  const minutes = parts[1];
+  if (isNaN(hours)) return time24;
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12; // supports 12 instead of 0
+  const formattedHours = String(hours).padStart(2, '0');
+  return `${formattedHours}:${minutes} ${ampm}`;
+};
+
+const convert12hTo24h = (time12: string): string => {
+  if (!time12) return '';
+  const match = time12.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (!match) return '';
+  let hours = parseInt(match[1], 10);
+  const minutes = match[2];
+  const ampm = match[3].toUpperCase();
+  if (ampm === 'PM' && hours < 12) {
+    hours += 12;
+  } else if (ampm === 'AM' && hours === 12) {
+    hours = 0;
+  }
+  return `${String(hours).padStart(2, '0')}:${minutes}`;
+};
+
 const IssueEntry: React.FC = () => {
   const [formData, setFormData] = useState({
     client_name: '',
@@ -14,7 +43,21 @@ const IssueEntry: React.FC = () => {
     assigned_person: '',
     issue_details: '',
     issue_date: new Date().toISOString().split('T')[0],
+    response_time: '',
+    resolution_time: '',
+    client_reporting_time: '',
   });
+
+  const getCurrentTime12h = () => {
+    const now = new Date();
+    let hours = now.getHours();
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // supports 12 instead of 0
+    const formattedHours = String(hours).padStart(2, '0');
+    return `${formattedHours}:${minutes} ${ampm}`;
+  };
 
   const [options, setOptions] = useState<{
     issueTypes: SettingItem[];
@@ -33,6 +76,76 @@ const IssueEntry: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  const [useLiveTime, setUseLiveTime] = useState(true);
+  const [manualDate, setManualDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [manualTime, setManualTime] = useState(() => {
+    const d = new Date();
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  });
+
+  const formatDate12h = (dateTimeStr: string) => {
+    if (!dateTimeStr) return '';
+    const dateObj = new Date(dateTimeStr);
+    if (isNaN(dateObj.getTime())) return dateTimeStr;
+
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    const month = months[dateObj.getMonth()];
+    const year = dateObj.getFullYear();
+    
+    let hours = dateObj.getHours();
+    const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+    const seconds = String(dateObj.getSeconds()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // supports 12 instead of 0
+    const formattedHours = String(hours).padStart(2, '0');
+
+    return `${day}-${month}-${year} ${formattedHours}:${minutes} ${ampm}`;
+  };
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+
+    const setSelectedDateAndTimeToFormData = (dateObj: Date) => {
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      const hours = String(dateObj.getHours()).padStart(2, '0');
+      const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+      const seconds = String(dateObj.getSeconds()).padStart(2, '0');
+      
+      const formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+      setFormData(prev => ({
+        ...prev,
+        issue_date: formattedDateTime
+      }));
+    };
+
+    const updateFormDataFromManual = (dateStr: string, timeStr: string) => {
+      if (!dateStr || !timeStr) return;
+      const formattedDateTime = `${dateStr}T${timeStr}:00`;
+      setFormData(prev => ({
+        ...prev,
+        issue_date: formattedDateTime
+      }));
+    };
+
+    if (useLiveTime) {
+      setSelectedDateAndTimeToFormData(new Date());
+
+      interval = setInterval(() => {
+        setSelectedDateAndTimeToFormData(new Date());
+      }, 1000);
+    } else {
+      updateFormDataFromManual(manualDate, manualTime);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [useLiveTime, manualDate, manualTime]);
 
   useEffect(() => {
     loadOptions();
@@ -82,7 +195,10 @@ const IssueEntry: React.FC = () => {
       // 1. Save to Supabase
       let supabaseSuccess = false;
       try {
-        await dbService.saveIssue(formData);
+        await dbService.saveIssue({
+          ...formData,
+          created_at: formData.issue_date
+        });
         supabaseSuccess = true;
       } catch (sbError: any) {
         console.error('Supabase Save Error:', sbError);
@@ -117,6 +233,9 @@ const IssueEntry: React.FC = () => {
         ...prev,
         client_name: '',
         issue_details: '',
+        response_time: '',
+        resolution_time: '',
+        client_reporting_time: '',
       }));
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
@@ -199,14 +318,67 @@ const IssueEntry: React.FC = () => {
               </select>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Issue Date *</label>
-              <input 
-                type="date"
-                value={formData.issue_date}
-                onChange={(e) => setFormData({...formData, issue_date: e.target.value})}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs"
-              />
+            <div className="space-y-1.5 md:col-span-2 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200/60 dark:border-slate-700/50">
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  Ticket Create Time *
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500">
+                    {useLiveTime ? 'Live System Time' : 'Manual Entry'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setUseLiveTime(!useLiveTime)}
+                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${useLiveTime ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-700'}`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${useLiveTime ? 'translate-x-4' : 'translate-x-0'}`}
+                    />
+                  </button>
+                </div>
+              </div>
+
+              {useLiveTime ? (
+                <div className="flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2 px-3 shadow-inner">
+                  <div className="flex items-center gap-2">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span className="text-xs font-mono font-bold text-slate-800 dark:text-slate-200">
+                      {formatDate12h(formData.issue_date)}
+                    </span>
+                  </div>
+                  <span className="text-[9px] font-bold uppercase py-0.5 px-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40 rounded-md">
+                    Running
+                  </span>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <input 
+                      type="date"
+                      value={manualDate}
+                      onChange={(e) => {
+                        setManualDate(e.target.value);
+                      }}
+                      className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs font-medium"
+                    />
+                    <input 
+                      type="time"
+                      value={manualTime}
+                      onChange={(e) => {
+                        setManualTime(e.target.value);
+                      }}
+                      className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs font-medium"
+                    />
+                  </div>
+                  <div className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 p-1.5 px-2.5 rounded-md border border-indigo-100/50 dark:border-indigo-900/30 font-mono">
+                    Selected (12h format): {formatDate12h(formData.issue_date)}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-1.5">
@@ -229,6 +401,63 @@ const IssueEntry: React.FC = () => {
               >
                 {options.statuses.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
               </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Client Reporting Time</label>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, client_reporting_time: getCurrentTime12h() }))}
+                  className="text-[10px] text-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold transition-colors"
+                >
+                  Set Now
+                </button>
+              </div>
+              <input 
+                type="time"
+                value={convert12hTo24h(formData.client_reporting_time)}
+                onChange={(e) => setFormData({...formData, client_reporting_time: convert24hTo12h(e.target.value)})}
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Response Time</label>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, response_time: getCurrentTime12h() }))}
+                  className="text-[10px] text-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold transition-colors"
+                >
+                  Set Now
+                </button>
+              </div>
+              <input 
+                type="time"
+                value={convert12hTo24h(formData.response_time)}
+                onChange={(e) => setFormData({...formData, response_time: convert24hTo12h(e.target.value)})}
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Resolution Time</label>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, resolution_time: getCurrentTime12h() }))}
+                  className="text-[10px] text-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold transition-colors"
+                >
+                  Set Now
+                </button>
+              </div>
+              <input 
+                type="time"
+                value={convert12hTo24h(formData.resolution_time)}
+                onChange={(e) => setFormData({...formData, resolution_time: convert24hTo12h(e.target.value)})}
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs"
+              />
             </div>
           </div>
 

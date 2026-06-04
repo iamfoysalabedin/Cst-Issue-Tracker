@@ -31,6 +31,47 @@ const INITIAL_SETTINGS: Omit<SettingItem, 'id' | 'created_at'>[] = [
   { category: 'issue_category', name: 'Network' },
 ];
 
+export function parseIssueVirtualFields(issue: any): any {
+  if (!issue) return issue;
+  let details = issue.issue_details || '';
+  let response_time = issue.response_time || '';
+  let resolution_time = issue.resolution_time || '';
+  let client_reporting_time = issue.client_reporting_time || '';
+
+  // Fallback to metadata tag format if the actual columns are empty
+  if (!response_time || !resolution_time || !client_reporting_time) {
+    const tagRegex = /\[Metadata: [^\]]*\]/;
+    const match = details.match(tagRegex);
+    if (match) {
+      const tagContent = match[0];
+      
+      const rtMatch = tagContent.match(/ResponseTime="([^"]*)"/);
+      if (rtMatch && !response_time) response_time = rtMatch[1];
+      
+      const rsMatch = tagContent.match(/ResolutionTime="([^"]*)"/);
+      if (rsMatch && !resolution_time) resolution_time = rsMatch[1];
+
+      const crMatch = tagContent.match(/ClientReportingTime="([^"]*)"/);
+      if (crMatch && !client_reporting_time) client_reporting_time = crMatch[1];
+
+      details = details.replace(tagRegex, '').trim();
+    }
+  }
+  
+  return {
+    ...issue,
+    issue_details: details,
+    response_time: response_time || '',
+    resolution_time: resolution_time || '',
+    client_reporting_time: client_reporting_time || ''
+  };
+}
+
+export function serializeIssueVirtualFields(issue: any): any {
+  // Returns issue unaltered now since we support actual columns!
+  return issue;
+}
+
 export const dbService = {
   // Settings
   async getSettings(): Promise<SettingItem[]> {
@@ -122,14 +163,15 @@ export const dbService = {
       console.error('Error fetching issues:', error);
       return [];
     }
-    return data as Issue[];
+    return (data || []).map(item => parseIssueVirtualFields(item)) as Issue[];
   },
 
-  async saveIssue(issue: Omit<Issue, 'id' | 'created_at' | 'updated_at'>): Promise<Issue> {
-    console.log('Attempting to save issue to Supabase:', issue);
+  async saveIssue(issue: Omit<Issue, 'id' | 'created_at' | 'updated_at'> & { created_at?: string }): Promise<Issue> {
+    const serialized = serializeIssueVirtualFields(issue);
+    console.log('Attempting to save issue to Supabase:', serialized);
     const { data, error } = await supabase
       .from('issues')
-      .insert([issue])
+      .insert([serialized])
       .select();
     
     if (error) {
@@ -141,19 +183,24 @@ export const dbService = {
       throw new Error('No data returned from Supabase after insert');
     }
     console.log('Successfully saved to Supabase:', data[0]);
-    return data[0] as Issue;
+    return parseIssueVirtualFields(data[0]) as Issue;
   },
 
   async updateIssue(id: string, updates: Partial<Issue>): Promise<Issue> {
+    const finalUpdates = {
+      ...updates,
+      updated_at: new Date().toISOString()
+    };
+
     const { data, error } = await supabase
       .from('issues')
-      .update({ ...updates, updated_at: new Date().toISOString() })
+      .update(finalUpdates)
       .eq('id', id)
       .select()
       .single();
     
     if (error) throw error;
-    return data as Issue;
+    return parseIssueVirtualFields(data) as Issue;
   },
 
   async deleteIssue(id: string): Promise<void> {

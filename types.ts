@@ -23,6 +23,9 @@ export interface Issue {
   issue_date: string;
   created_at: string;
   updated_at: string;
+  response_time?: string;
+  resolution_time?: string;
+  client_reporting_time?: string;
 }
 
 export interface MonthlyEntry {

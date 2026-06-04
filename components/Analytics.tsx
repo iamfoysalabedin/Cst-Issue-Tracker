@@ -21,7 +21,8 @@ import {
   ChevronDown,
   ChevronUp,
   User,
-  Download
+  Download,
+  Clock
 } from 'lucide-react';
 import { CHART_COLORS } from '../constants';
 
@@ -34,7 +35,32 @@ const Analytics: React.FC = () => {
   const [repeatPage, setRepeatPage] = useState(1);
   const [subRepeatPages, setSubRepeatPages] = useState<Record<string, number>>({});
   const [repeatSelectedMonth, setRepeatSelectedMonth] = useState<string>('all');
+  const [timeReportMode, setTimeReportMode] = useState<'month' | 'year'>('month');
+  const [expandedTimePersons, setExpandedTimePersons] = useState<Record<string, boolean>>({});
   const itemsPerPage = 10;
+
+  const timeToMinutes = (timeStr: string): number | null => {
+    if (!timeStr) return null;
+    const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+    if (!match) return null;
+    let hours = parseInt(match[1], 10);
+    const minutes = parseInt(match[2], 10);
+    const ampm = match[3].toUpperCase();
+    if (ampm === 'PM' && hours < 12) {
+      hours += 12;
+    } else if (ampm === 'AM' && hours === 12) {
+      hours = 0;
+    }
+    return hours * 60 + minutes;
+  };
+
+  const formatDuration = (minutes: number | null): string => {
+    if (minutes === null || minutes < 0) return '-';
+    if (minutes < 60) return `${minutes} mins`;
+    const hrs = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return mins > 0 ? `${hrs}h ${mins}m` : `${hrs}h`;
+  };
 
   useEffect(() => {
     setRepeatPage(1);
@@ -111,6 +137,101 @@ const Analytics: React.FC = () => {
     }).length;
     return { name: monthName, count };
   });
+
+  const timePerformanceData = useMemo(() => {
+    const targetIssues = timeReportMode === 'month' ? monthlyIssues : yearlyIssues;
+
+    // Group issues by assigned person
+    const groupings: Record<string, {
+      person: string;
+      issues: (Issue & {
+        responseLag: number | null;
+        resolutionLag: number | null;
+        totalLag: number | null;
+      })[];
+      avgResponseLag: number | null;
+      avgResolutionLag: number | null;
+      avgTotalLag: number | null;
+      totalWithTimes: number;
+    }> = {};
+
+    targetIssues.forEach(issue => {
+      const person = (issue.assigned_person || 'Unassigned').trim();
+      if (!groupings[person]) {
+        groupings[person] = {
+          person,
+          issues: [],
+          avgResponseLag: null,
+          avgResolutionLag: null,
+          avgTotalLag: null,
+          totalWithTimes: 0,
+        };
+      }
+
+      const clientRepMin = timeToMinutes(issue.client_reporting_time || '');
+      const respMin = timeToMinutes(issue.response_time || '');
+      const resolMin = timeToMinutes(issue.resolution_time || '');
+
+      let responseLag: number | null = null;
+      let resolutionLag: number | null = null;
+      let totalLag: number | null = null;
+
+      if (clientRepMin !== null && respMin !== null) {
+        responseLag = respMin - clientRepMin;
+        if (responseLag < 0) responseLag += 24 * 60; // crossover handler
+      }
+      if (respMin !== null && resolMin !== null) {
+        resolutionLag = resolMin - respMin;
+        if (resolutionLag < 0) resolutionLag += 24 * 60; // crossover handler
+      }
+      if (clientRepMin !== null && resolMin !== null) {
+        totalLag = resolMin - clientRepMin;
+        if (totalLag < 0) totalLag += 24 * 60; // crossover handler
+      }
+
+      groupings[person].issues.push({
+        ...issue,
+        responseLag,
+        resolutionLag,
+        totalLag,
+      });
+    });
+
+    // Calculate averages for each person
+    return Object.values(groupings).map(group => {
+      let responseLagSum = 0;
+      let responseLagCount = 0;
+
+      let resolutionLagSum = 0;
+      let resolutionLagCount = 0;
+
+      let totalLagSum = 0;
+      let totalLagCount = 0;
+
+      group.issues.forEach(issue => {
+        if (issue.responseLag !== null) {
+          responseLagSum += issue.responseLag;
+          responseLagCount++;
+        }
+        if (issue.resolutionLag !== null) {
+          resolutionLagSum += issue.resolutionLag;
+          resolutionLagCount++;
+        }
+        if (issue.totalLag !== null) {
+          totalLagSum += issue.totalLag;
+          totalLagCount++;
+        }
+      });
+
+      return {
+        ...group,
+        avgResponseLag: responseLagCount > 0 ? Math.round(responseLagSum / responseLagCount) : null,
+        avgResolutionLag: resolutionLagCount > 0 ? Math.round(resolutionLagSum / resolutionLagCount) : null,
+        avgTotalLag: totalLagCount > 0 ? Math.round(totalLagSum / totalLagCount) : null,
+        totalWithTimes: totalLagCount,
+      };
+    }).sort((a, b) => b.issues.length - a.issues.length); // Sort by total issues handled in context
+  }, [monthlyIssues, yearlyIssues, timeReportMode]);
 
   // Calculate repeated client issues per assigned person
   const repeatAnalysis = useMemo(() => {
@@ -458,6 +579,197 @@ const Analytics: React.FC = () => {
               </BarChart>
             </ResponsiveContainer>
           </div>
+        </div>
+      </div>
+
+      {/* Time Performance Analytics Section */}
+      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm p-8 space-y-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 dark:border-slate-800 pb-6">
+          <div>
+            <h3 className="font-bold text-slate-900 dark:text-white text-xl flex items-center gap-2">
+              <Clock size={20} className="text-indigo-600" />
+              Assigned Person Time Performance Analytics
+            </h3>
+            <p className="text-sm text-slate-500">
+              Analyze speed metrics (Response and Resolution times) by handler for{' '}
+              {timeReportMode === 'month' ? `${months[parseInt(selectedMonth) - 1]} ${selectedYear}` : selectedYear}
+            </p>
+          </div>
+
+          {/* Mode Switcher */}
+          <div className="flex bg-slate-50 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+            <button
+              onClick={() => setTimeReportMode('month')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                timeReportMode === 'month'
+                  ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+            >
+              This Month
+            </button>
+            <button
+              onClick={() => setTimeReportMode('year')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                timeReportMode === 'year'
+                  ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+            >
+              Full Year
+            </button>
+          </div>
+        </div>
+
+        {/* Grid/Table content */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/10">
+                <th className="px-5 py-3.5 text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">Assigned Person</th>
+                <th className="px-5 py-3.5 text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap text-center">Total Tickets</th>
+                <th className="px-5 py-3.5 text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap text-center">Avg Response Speed</th>
+                <th className="px-5 py-3.5 text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap text-center">Avg Resolution Speed</th>
+                <th className="px-5 py-3.5 text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap text-center">Avg Total Support Time</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-150 dark:divide-slate-800">
+              {timePerformanceData.length > 0 ? (
+                timePerformanceData.map((data) => {
+                  const isExpanded = !!expandedTimePersons[data.person];
+                  
+                  return (
+                    <React.Fragment key={data.person}>
+                      <tr 
+                        onClick={() => setExpandedTimePersons(prev => ({ ...prev, [data.person]: !prev[data.person] }))}
+                        className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors cursor-pointer select-none"
+                        title="Click to view/hide detailed ticket breakdown"
+                      >
+                        <td className="px-5 py-4 font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                          {data.person}
+                        </td>
+                        <td className="px-5 py-4 font-bold text-indigo-600 dark:text-indigo-400 text-center whitespace-nowrap">
+                          {data.issues.length}
+                        </td>
+                        <td className="px-5 py-4 text-center whitespace-nowrap">
+                          <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${
+                            data.avgResponseLag !== null 
+                              ? 'bg-amber-50 dark:bg-amber-900/10 text-amber-605 dark:text-amber-400'
+                              : 'text-slate-400'
+                          }`}>
+                            {formatDuration(data.avgResponseLag)}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4 text-center whitespace-nowrap">
+                          <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${
+                            data.avgResolutionLag !== null 
+                              ? 'bg-emerald-50 dark:bg-emerald-900/10 text-emerald-600 dark:text-emerald-400'
+                              : 'text-slate-400'
+                          }`}>
+                            {formatDuration(data.avgResolutionLag)}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4 text-center whitespace-nowrap">
+                          <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
+                            data.avgTotalLag !== null 
+                              ? 'bg-indigo-50 dark:bg-indigo-900/15 text-indigo-600 dark:text-indigo-400'
+                              : 'text-slate-400'
+                          }`}>
+                            {formatDuration(data.avgTotalLag)}
+                          </span>
+                        </td>
+                      </tr>
+
+                      {/* Expandable detailed ticket stats */}
+                      {isExpanded && (
+                        <tr>
+                          <td colSpan={5} className="px-6 py-4 bg-slate-50/60 dark:bg-slate-900/40">
+                            <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-905 shadow-inner" onClick={(e) => e.stopPropagation()}>
+                              <div className="p-4 bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                                <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                                  Ticket Timeline Log for {data.person}
+                                </h4>
+                                <span className="text-[11px] text-slate-400 font-semibold">
+                                  Showing {data.issues.length} entries
+                                </span>
+                              </div>
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-left text-xs">
+                                  <thead>
+                                    <tr className="bg-slate-50/50 dark:bg-slate-800/20 border-b border-slate-200 dark:border-slate-800">
+                                      <th className="px-4 py-2.5 font-bold text-slate-500 whitespace-nowrap">ID & Client</th>
+                                      <th className="px-4 py-2.5 font-bold text-slate-500 whitespace-nowrap text-center">Issue Date and time</th>
+                                      <th className="px-4 py-2.5 font-bold text-slate-500 whitespace-nowrap text-center">Client Reporting Time</th>
+                                      <th className="px-4 py-2.5 font-bold text-slate-500 whitespace-nowrap text-center">Response Time</th>
+                                      <th className="px-4 py-2.5 font-bold text-slate-500 whitespace-nowrap text-center">Resolution Time</th>
+                                      <th className="px-4 py-2.5 font-bold text-slate-500 whitespace-nowrap text-center">Response Speed</th>
+                                      <th className="px-4 py-2.5 font-bold text-slate-500 whitespace-nowrap text-center">Resolution Speed</th>
+                                      <th className="px-4 py-2.5 font-bold text-slate-500 whitespace-nowrap text-center">Total Time</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                                    {data.issues.map((issue) => (
+                                      <tr key={issue.id} className="hover:bg-slate-50/40 dark:hover:bg-slate-800/10 transition-colors">
+                                        <td className="px-4 py-3 font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                                          <div className="flex flex-col">
+                                            <span className="font-bold">#{issue.id}</span>
+                                            <span className="text-[10px] text-slate-400">{issue.client_name}</span>
+                                          </div>
+                                        </td>
+                                        <td className="px-4 py-3 text-slate-600 dark:text-slate-400 text-center whitespace-nowrap font-medium">
+                                          {issue.issue_date || '-'}
+                                        </td>
+                                        <td className="px-4 py-3 text-slate-600 dark:text-slate-400 text-center whitespace-nowrap font-medium">
+                                          {issue.client_reporting_time || '-'}
+                                        </td>
+                                        <td className="px-4 py-3 text-slate-600 dark:text-slate-400 text-center whitespace-nowrap font-medium">
+                                          {issue.response_time || '-'}
+                                        </td>
+                                        <td className="px-4 py-3 text-slate-600 dark:text-slate-400 text-center whitespace-nowrap font-medium">
+                                          {issue.resolution_time || '-'}
+                                        </td>
+                                        <td className="px-4 py-3 text-center whitespace-nowrap">
+                                          {issue.responseLag !== null ? (
+                                            <span className="text-amber-600 dark:text-amber-400 font-bold">
+                                              {formatDuration(issue.responseLag)}
+                                            </span>
+                                          ) : (
+                                            <span className="text-slate-300 dark:text-slate-700">-</span>
+                                          )}
+                                        </td>
+                                        <td className="px-4 py-3 text-center whitespace-nowrap">
+                                          {issue.resolutionLag !== null ? (
+                                            <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                                              {formatDuration(issue.resolutionLag)}
+                                            </span>
+                                          ) : (
+                                            <span className="text-slate-300 dark:text-slate-700">-</span>
+                                          )}
+                                        </td>
+                                        <td className="px-4 py-3 text-center whitespace-nowrap font-bold text-indigo-600 dark:text-indigo-400">
+                                          {issue.totalLag !== null ? formatDuration(issue.totalLag) : '-'}
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={5} className="px-5 py-8 text-center text-slate-400 italic">
+                    No time metrics recorded for this selected period.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 

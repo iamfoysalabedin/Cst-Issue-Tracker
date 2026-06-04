@@ -6,6 +6,35 @@ import { PRIORITY_COLORS, STATUS_COLORS } from '../constants';
 import { Search, Filter, Download, Trash2, Edit2, X, ChevronLeft, ChevronRight, Upload, FileSpreadsheet, CheckSquare, Square } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
+const convert24hTo12h = (time24: string): string => {
+  if (!time24) return '';
+  const parts = time24.split(':');
+  if (parts.length < 2) return time24;
+  let hours = parseInt(parts[0], 10);
+  const minutes = parts[1];
+  if (isNaN(hours)) return time24;
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12; // supports 12 instead of 0
+  const formattedHours = String(hours).padStart(2, '0');
+  return `${formattedHours}:${minutes} ${ampm}`;
+};
+
+const convert12hTo24h = (time12: string): string => {
+  if (!time12) return '';
+  const match = time12.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (!match) return '';
+  let hours = parseInt(match[1], 10);
+  const minutes = match[2];
+  const ampm = match[3].toUpperCase();
+  if (ampm === 'PM' && hours < 12) {
+    hours += 12;
+  } else if (ampm === 'AM' && hours === 12) {
+    hours = 0;
+  }
+  return `${String(hours).padStart(2, '0')}:${minutes}`;
+};
+
 const IssueReports: React.FC = () => {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [search, setSearch] = useState('');
@@ -21,6 +50,54 @@ const IssueReports: React.FC = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<{show: boolean, id: string | null, isBulk: boolean}>({ show: false, id: null, isBulk: false });
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const formatIssueDateTime = (dateStr: string, createdAtStr?: string) => {
+    // Prioritize createdAtStr as it contains the full timezone-aware timestamp
+    const targetStr = createdAtStr || dateStr;
+    if (!targetStr) return '';
+    
+    const dateObj = new Date(targetStr);
+    if (isNaN(dateObj.getTime())) return targetStr;
+
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    const month = months[dateObj.getMonth()];
+    const year = dateObj.getFullYear();
+    
+    let hours = dateObj.getHours();
+    const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+    const seconds = String(dateObj.getSeconds()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // supports 12 instead of 0
+    const formattedHours = String(hours).padStart(2, '0');
+
+    // For legacy dates without time components (e.g. "2026-06-04" of length <= 10 with no time separator)
+    const isOnlyDate = targetStr && !targetStr.includes('T') && !targetStr.includes(':') && targetStr.length <= 10;
+    
+    // Check if it's exactly midnight (means legacy or imported date)
+    const isMidnight = dateObj.getHours() === 0 && dateObj.getMinutes() === 0 && dateObj.getSeconds() === 0;
+
+    if (isOnlyDate || isMidnight) {
+      return `${day}-${month}-${year}`;
+    }
+
+    return `${day}-${month}-${year} ${formattedHours}:${minutes} ${ampm}`;
+  };
+
+  const formatForDateTimeLocal = (dateStr: string) => {
+    if (!dateStr) return '';
+    const dateObj = new Date(dateStr);
+    if (isNaN(dateObj.getTime())) return '';
+    
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    const hours = String(dateObj.getHours()).padStart(2, '0');
+    const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
 
   const [options, setOptions] = useState<{
     issueTypes: SettingItem[];
@@ -162,6 +239,9 @@ const IssueReports: React.FC = () => {
           assigned_person: row['Assigned To'] || row['assigned_person'] || 'Unassigned',
           issue_details: row['Issue Details'] || row['issue_details'] || '',
           issue_date: parseDate(row['Issue Date'] || row['issue_date']),
+          response_time: row['Response Time'] || row['response_time'] || '',
+          resolution_time: row['Resolution Time'] || row['resolution_time'] || '',
+          client_reporting_time: row['Client Reporting Time'] || row['client_reporting_time'] || '',
         }));
 
         for (const issue of newIssues) {
@@ -192,7 +272,10 @@ const IssueReports: React.FC = () => {
         'Status': 'Open',
         'Assigned To': 'Fuad',
         'Issue Details': 'This is a sample bug description',
-        'Issue Date': formattedDate
+        'Issue Date': formattedDate,
+        'Response Time': '10:30 AM',
+        'Resolution Time': '11:45 AM',
+        'Client Reporting Time': '10:15 AM'
       }
     ];
     const ws = XLSX.utils.json_to_sheet(sampleData);
@@ -247,19 +330,66 @@ const IssueReports: React.FC = () => {
   const totalPages = Math.ceil(filteredIssues.length / itemsPerPage);
   const currentIssues = filteredIssues.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  const exportCSV = () => {
-    const headers = ['ID', 'Client', 'Type', 'Category', 'Priority', 'Status', 'Assigned', 'Issue Date', 'Created At'];
+  const exportExcel = () => {
+    const headers = [
+      'Ticket ID',
+      'Client Name',
+      'Issue Type',
+      'Category',
+      'Priority',
+      'Status',
+      'Assigned Handler',
+      'Issue Date & Time',
+      'Client Reporting Time',
+      'Response Time',
+      'Resolution Time',
+      'Issue Details',
+      'System Log Time'
+    ];
+
     const rows = filteredIssues.map(i => [
-      i.id, i.client_name, i.issue_type, i.category, i.priority, i.status, i.assigned_person, i.issue_date || new Date(i.created_at).toLocaleDateString(), new Date(i.created_at).toLocaleDateString()
+      i.id || '',
+      i.client_name || '',
+      i.issue_type || '',
+      i.category || '',
+      i.priority || '',
+      i.status || '',
+      i.assigned_person || '',
+      formatIssueDateTime(i.issue_date, i.created_at),
+      i.client_reporting_time || '',
+      i.response_time || '',
+      i.resolution_time || '',
+      i.issue_details || '',
+      i.created_at ? new Date(i.created_at).toLocaleString() : ''
     ]);
-    const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].map(e => e.join(",")).join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "issue_report.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+
+    // Create sheet
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+
+    // Set column widths for a polished, readable layout
+    const wscols = [
+      { wch: 12 },  // Ticket ID
+      { wch: 25 },  // Client Name
+      { wch: 18 },  // Issue Type
+      { wch: 15 },  // Category
+      { wch: 12 },  // Priority
+      { wch: 12 },  // Status
+      { wch: 22 },  // Assigned Handler
+      { wch: 22 },  // Issue Date & Time
+      { wch: 22 },  // Client Reporting Time
+      { wch: 18 },  // Response Time
+      { wch: 18 },  // Resolution Time
+      { wch: 45 },  // Issue Details (widened for easy reading of log details)
+      { wch: 22 }   // System Log Time
+    ];
+    ws['!cols'] = wscols;
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Issue Reports");
+
+    // Save file with timestamp in name
+    const today = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(wb, `Issue_Report_${today}.xlsx`);
   };
 
   return (
@@ -373,9 +503,9 @@ const IssueReports: React.FC = () => {
               <FileSpreadsheet size={16} />
             </button>
             <button 
-              onClick={exportCSV}
+              onClick={exportExcel}
               className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
-              title="Export CSV"
+              title="Export Excel"
             >
               <Download size={16} />
             </button>
@@ -414,7 +544,10 @@ const IssueReports: React.FC = () => {
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Priority</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Assigned</th>
-                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Issue Date</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Issue Date and time</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Client Reporting Time</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Response Time</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Resolution Time</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
@@ -449,8 +582,11 @@ const IssueReports: React.FC = () => {
                     </span>
                   </td>
                   <td className="px-4 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400">{issue.assigned_person}</td>
-                  <td className="px-4 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400">{issue.issue_date || new Date(issue.created_at).toLocaleDateString()}</td>
-                  <td className="px-4 py-2.5 text-right">
+                  <td className="px-4 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">{formatIssueDateTime(issue.issue_date, issue.created_at)}</td>
+                  <td className="px-4 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">{issue.client_reporting_time || '-'}</td>
+                  <td className="px-4 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">{issue.response_time || '-'}</td>
+                  <td className="px-4 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">{issue.resolution_time || '-'}</td>
+                  <td className="px-4 py-2.5 text-right flex-nowrap">
                     <div className="flex items-center justify-end gap-1.5">
                       <button 
                         onClick={() => setEditingIssue(issue)}
@@ -469,7 +605,7 @@ const IssueReports: React.FC = () => {
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-slate-400 text-xs">
+                  <td colSpan={12} className="px-4 py-10 text-center text-slate-400 text-xs">
                     No issues found matching your criteria.
                   </td>
                 </tr>
@@ -581,11 +717,45 @@ const IssueReports: React.FC = () => {
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Issue Date</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Ticket Create Time</label>
                   <input 
-                    type="date"
-                    value={editingIssue.issue_date || ''}
-                    onChange={(e) => setEditingIssue({...editingIssue, issue_date: e.target.value})}
+                    type="datetime-local"
+                    value={formatForDateTimeLocal(editingIssue.created_at || editingIssue.issue_date)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setEditingIssue({
+                        ...editingIssue,
+                        created_at: val ? new Date(val).toISOString() : '',
+                        issue_date: val ? val.split('T')[0] : ''
+                      });
+                    }}
+                    className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white text-xs"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Client Reporting Time</label>
+                  <input 
+                    type="time"
+                    value={convert12hTo24h(editingIssue.client_reporting_time || '')}
+                    onChange={(e) => setEditingIssue({...editingIssue, client_reporting_time: convert24hTo12h(e.target.value)})}
+                    className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white text-xs"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Response Time</label>
+                  <input 
+                    type="time"
+                    value={convert12hTo24h(editingIssue.response_time || '')}
+                    onChange={(e) => setEditingIssue({...editingIssue, response_time: convert24hTo12h(e.target.value)})}
+                    className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white text-xs"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Resolution Time</label>
+                  <input 
+                    type="time"
+                    value={convert12hTo24h(editingIssue.resolution_time || '')}
+                    onChange={(e) => setEditingIssue({...editingIssue, resolution_time: convert24hTo12h(e.target.value)})}
                     className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white text-xs"
                   />
                 </div>
