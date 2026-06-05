@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { dbService } from '../services/dbService';
 import { SystemDowntime } from '../types';
 import { SYSTEMS } from '../constants';
-import { Trash2, AlertTriangle, Calendar, Filter, Edit2, X, Activity } from 'lucide-react';
+import { Trash2, AlertTriangle, Calendar, Filter, Edit2, X, Activity, FileSpreadsheet } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 const DowntimeReports: React.FC = () => {
   const [data, setData] = useState<SystemDowntime[]>([]);
@@ -71,6 +72,47 @@ const DowntimeReports: React.FC = () => {
     return matchesSystem && matchesFrom && matchesTo;
   });
 
+  const exportExcel = () => {
+    const headers = [
+      'Incident Date',
+      'Impacted System',
+      'Start Time',
+      'End Time',
+      'Duration (Minutes)',
+      'System Log Time'
+    ];
+
+    const rows = filteredData.map(d => [
+      d.date || '',
+      d.system_name || '',
+      formatTo12h(d.start_time),
+      formatTo12h(d.end_time),
+      d.duration_minutes || 0,
+      d.created_at ? new Date(d.created_at).toLocaleString() : ''
+    ]);
+
+    // Create workbook and worksheet
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+
+    // Set column widths for a polished layout
+    const wscols = [
+      { wch: 15 },  // Incident Date
+      { wch: 25 },  // Impacted System
+      { wch: 15 },  // Start Time
+      { wch: 15 },  // End Time
+      { wch: 20 },  // Duration (Minutes)
+      { wch: 25 }   // System Log Time
+    ];
+    ws['!cols'] = wscols;
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Downtime Report");
+
+    // Save file with current date appended
+    const today = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(wb, `Downtime_Report_${today}.xlsx`);
+  };
+
   const totalDowntime = filteredData.reduce((acc, curr) => acc + curr.duration_minutes, 0);
 
   return (
@@ -125,6 +167,14 @@ const DowntimeReports: React.FC = () => {
             className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm dark:text-white"
           />
         </div>
+        <button
+          onClick={exportExcel}
+          className="px-4 py-2 bg-rose-600 dark:bg-rose-700 hover:bg-rose-700 dark:hover:bg-rose-600 text-white font-bold rounded-xl shadow-lg hover:shadow-rose-500/20 transition-all flex items-center gap-2 text-sm cursor-pointer ml-auto"
+          title="Export report to Excel"
+        >
+          <FileSpreadsheet size={16} />
+          Export Excel
+        </button>
       </div>
 
       {/* Table */}
