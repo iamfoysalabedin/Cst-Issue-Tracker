@@ -12,6 +12,7 @@ import DowntimeReports from './components/DowntimeReports';
 import Settings from './components/Settings';
 import Analytics from './components/Analytics';
 import WeeklyReport from './components/WeeklyReport';
+import SimFinder from './components/SimFinder';
 
 const App: React.FC = () => {
   return (
@@ -27,6 +28,7 @@ const App: React.FC = () => {
           <Route path="/downtime-entry" element={<DowntimeEntry />} />
           <Route path="/downtime-reports" element={<DowntimeReports />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/sim-finder" element={<SimFinder />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/weekly-report" element={<WeeklyReport />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

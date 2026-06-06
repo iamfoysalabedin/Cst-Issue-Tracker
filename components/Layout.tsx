@@ -14,7 +14,8 @@ import {
   Sun,
   Moon,
   ShieldCheck,
-  Settings
+  Settings,
+  Search
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -53,6 +54,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { id: 'DowntimeEntry', icon: Clock, label: 'Downtime Entry', path: '/downtime-entry' },
     { id: 'DowntimeReports', icon: History, label: 'Downtime Reports', path: '/downtime-reports' },
     { id: 'divider4', type: 'divider', label: 'Config' },
+    { id: 'SimFinder', icon: Search, label: 'SIM Finder', path: '/sim-finder' },
     { id: 'Settings', icon: Settings, label: 'Settings', path: '/settings' },
   ];
 

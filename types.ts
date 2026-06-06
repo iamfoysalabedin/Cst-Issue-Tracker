@@ -58,5 +58,6 @@ export type ViewType =
   | 'DowntimeEntry' 
   | 'DowntimeReports'
   | 'Settings'
+  | 'SimFinder'
   | 'Analytics'
   | 'WeeklyReport';
