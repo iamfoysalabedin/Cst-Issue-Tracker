@@ -195,9 +195,17 @@ const IssueEntry: React.FC = () => {
       // 1. Save to Supabase
       let supabaseSuccess = false;
       try {
+        let finalCreatedAt = formData.issue_date;
+        if (formData.issue_date) {
+          const parsedDate = new Date(formData.issue_date);
+          if (!isNaN(parsedDate.getTime())) {
+            finalCreatedAt = parsedDate.toISOString();
+          }
+        }
+
         await dbService.saveIssue({
           ...formData,
-          created_at: formData.issue_date
+          created_at: finalCreatedAt
         });
         supabaseSuccess = true;
       } catch (sbError: any) {
