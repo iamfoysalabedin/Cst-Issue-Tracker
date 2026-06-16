@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { dbService } from '../services/dbService';
+import { supabase } from '../lib/supabase';
 import { Issue, SettingItem } from '../types';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -73,6 +74,27 @@ const Analytics: React.FC = () => {
       setIssues(data);
     };
     loadData();
+
+    // Subscribe to real-time changes on issues table
+    const channel = supabase
+      .channel('analytics-issues-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'issues'
+        },
+        () => {
+          console.log('Real-time database update detected for issues. Refreshing Analytics...');
+          loadData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   // Process data for the selected year using robust date parsing

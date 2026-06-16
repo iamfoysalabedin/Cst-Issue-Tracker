@@ -154,16 +154,38 @@ export const dbService = {
 
   // Issues
   async getIssues(): Promise<Issue[]> {
-    const { data, error } = await supabase
-      .from('issues')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      console.error('Error fetching issues:', error);
-      return [];
+    let allData: any[] = [];
+    let page = 0;
+    const pageSize = 1000;
+    let hasMore = true;
+
+    while (hasMore) {
+      const from = page * pageSize;
+      const to = from + pageSize - 1;
+      const { data, error } = await supabase
+        .from('issues')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .range(from, to);
+
+      if (error) {
+        console.error('Error fetching issues batch:', error);
+        break;
+      }
+
+      if (data && data.length > 0) {
+        allData.push(...data);
+        if (data.length < pageSize) {
+          hasMore = false;
+        } else {
+          page++;
+        }
+      } else {
+        hasMore = false;
+      }
     }
-    return (data || []).map(item => parseIssueVirtualFields(item)) as Issue[];
+
+    return allData.map(item => parseIssueVirtualFields(item)) as Issue[];
   },
 
   async saveIssue(issue: Omit<Issue, 'id' | 'created_at' | 'updated_at'> & { created_at?: string }): Promise<Issue> {
