@@ -156,11 +156,8 @@ export default function NoticeGenerator() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              📢 Notice Generator / নোটিশ জেনারেটর
+              📢 Notice Generator
             </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Generate perfectly formatted bilingual (Bengali & English) training notice announcements instantly.
-            </p>
           </div>
         </div>
       </div>
@@ -180,11 +177,20 @@ export default function NoticeGenerator() {
                 <Calendar size={12} />
                 Date
               </label>
+              <style>{`
+                .custom-date-input::-webkit-calendar-picker-indicator {
+                  filter: invert(0.3) brightness(1);
+                  cursor: pointer;
+                }
+                .dark .custom-date-input::-webkit-calendar-picker-indicator {
+                  filter: invert(1) brightness(2);
+                }
+              `}</style>
               <input 
                 type="date" 
                 value={dateVal}
                 onChange={(e) => setDateVal(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-100"
+                className="custom-date-input w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-100"
               />
             </div>
 
@@ -261,7 +267,7 @@ export default function NoticeGenerator() {
                 type="text" 
                 value={topicBn}
                 onChange={(e) => setTopicBn(e.target.value)}
-                placeholder="उदा. সফটওয়্যার ট্রেনিং"
+                placeholder=""
                 className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-100"
               />
             </div>
@@ -276,7 +282,7 @@ export default function NoticeGenerator() {
                 type="text" 
                 value={topicEn}
                 onChange={(e) => setTopicEn(e.target.value)}
-                placeholder="e.g. Software Training"
+                placeholder=""
                 className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-100"
               />
             </div>
