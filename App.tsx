@@ -13,6 +13,7 @@ import Settings from './components/Settings';
 import Analytics from './components/Analytics';
 import WeeklyReport from './components/WeeklyReport';
 import SimFinder from './components/SimFinder';
+import NoticeGenerator from './components/NoticeGenerator';
 
 const App: React.FC = () => {
   return (
@@ -28,6 +29,7 @@ const App: React.FC = () => {
           <Route path="/downtime-entry" element={<DowntimeEntry />} />
           <Route path="/downtime-reports" element={<DowntimeReports />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/notice-generator" element={<NoticeGenerator />} />
           <Route path="/sim-finder" element={<SimFinder />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/weekly-report" element={<WeeklyReport />} />
