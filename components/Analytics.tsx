@@ -31,12 +31,13 @@ const Analytics: React.FC = () => {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
   const [selectedMonth, setSelectedMonth] = useState<string>(String(new Date().getMonth() + 1).padStart(2, '0'));
+  const [selectedDay, setSelectedDay] = useState<string>(String(new Date().getDate()).padStart(2, '0'));
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedPersons, setExpandedPersons] = useState<Record<string, boolean>>({});
   const [repeatPage, setRepeatPage] = useState(1);
   const [subRepeatPages, setSubRepeatPages] = useState<Record<string, number>>({});
   const [repeatSelectedMonth, setRepeatSelectedMonth] = useState<string>('all');
-  const [timeReportMode, setTimeReportMode] = useState<'month' | 'year'>('month');
+  const [timeReportMode, setTimeReportMode] = useState<'day' | 'month' | 'year'>('month');
   const [expandedTimePersons, setExpandedTimePersons] = useState<Record<string, boolean>>({});
   const itemsPerPage = 10;
 
@@ -120,6 +121,22 @@ const Analytics: React.FC = () => {
     return month === selectedMonth;
   });
 
+  const daysInMonth = useMemo(() => {
+    const year = parseInt(selectedYear, 10);
+    const month = parseInt(selectedMonth, 10);
+    return new Date(year, month, 0).getDate();
+  }, [selectedYear, selectedMonth]);
+
+  // Process data for the selected day
+  const dailyIssues = useMemo(() => {
+    const targetDateStr = `${selectedYear}-${selectedMonth}-${selectedDay}`;
+    return issues.filter(issue => {
+      const dateStr = issue.issue_date || issue.created_at;
+      if (!dateStr || typeof dateStr !== 'string') return false;
+      return dateStr.startsWith(targetDateStr);
+    });
+  }, [issues, selectedYear, selectedMonth, selectedDay]);
+
   // Aggregate by assigned person for the selected month
   const monthlyStats = monthlyIssues.reduce((acc, issue) => {
     const person = (issue.assigned_person || 'Unassigned').trim();
@@ -161,7 +178,12 @@ const Analytics: React.FC = () => {
   });
 
   const timePerformanceData = useMemo(() => {
-    const targetIssues = timeReportMode === 'month' ? monthlyIssues : yearlyIssues;
+    const targetIssues = 
+      timeReportMode === 'day' 
+        ? dailyIssues
+        : timeReportMode === 'month' 
+          ? monthlyIssues 
+          : yearlyIssues;
 
     // Group issues by assigned person
     const groupings: Record<string, {
@@ -253,7 +275,7 @@ const Analytics: React.FC = () => {
         totalWithTimes: totalLagCount,
       };
     }).sort((a, b) => b.issues.length - a.issues.length); // Sort by total issues handled in context
-  }, [monthlyIssues, yearlyIssues, timeReportMode]);
+  }, [dailyIssues, monthlyIssues, yearlyIssues, timeReportMode]);
 
   // Calculate repeated client issues per assigned person
   const repeatAnalysis = useMemo(() => {
@@ -614,32 +636,63 @@ const Analytics: React.FC = () => {
             </h3>
             <p className="text-sm text-slate-500">
               Analyze speed metrics (Response and Resolution times) by handler for{' '}
-              {timeReportMode === 'month' ? `${months[parseInt(selectedMonth) - 1]} ${selectedYear}` : selectedYear}
+              {timeReportMode === 'day' 
+                ? `${selectedDay} ${months[parseInt(selectedMonth) - 1]} ${selectedYear}` 
+                : timeReportMode === 'month' 
+                  ? `${months[parseInt(selectedMonth) - 1]} ${selectedYear}` 
+                  : selectedYear}
             </p>
           </div>
 
           {/* Mode Switcher */}
-          <div className="flex bg-slate-50 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
-            <button
-              onClick={() => setTimeReportMode('month')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                timeReportMode === 'month'
-                  ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-              }`}
-            >
-              This Month
-            </button>
-            <button
-              onClick={() => setTimeReportMode('year')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                timeReportMode === 'year'
-                  ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-              }`}
-            >
-              Full Year
-            </button>
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            {timeReportMode === 'day' && (
+              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                <span className="text-xs font-semibold text-slate-400 uppercase">Day:</span>
+                <select
+                  value={selectedDay}
+                  onChange={(e) => setSelectedDay(e.target.value)}
+                  className="bg-transparent text-xs font-bold outline-none cursor-pointer text-indigo-600 dark:text-indigo-400"
+                >
+                  {Array.from({ length: daysInMonth }, (_, i) => {
+                    const d = String(i + 1).padStart(2, '0');
+                    return <option key={d} value={d}>{d}</option>;
+                  })}
+                </select>
+              </div>
+            )}
+            <div className="flex bg-slate-50 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+              <button
+                onClick={() => setTimeReportMode('day')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  timeReportMode === 'day'
+                    ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                }`}
+              >
+                Daily
+              </button>
+              <button
+                onClick={() => setTimeReportMode('month')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  timeReportMode === 'month'
+                    ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                }`}
+              >
+                This Month
+              </button>
+              <button
+                onClick={() => setTimeReportMode('year')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  timeReportMode === 'year'
+                    ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                }`}
+              >
+                Full Year
+              </button>
+            </div>
           </div>
         </div>
 
