@@ -273,6 +273,7 @@ const Analytics: React.FC = () => {
         avgResolutionLag: resolutionLagCount > 0 ? Math.round(resolutionLagSum / resolutionLagCount) : null,
         avgTotalLag: totalLagCount > 0 ? Math.round(totalLagSum / totalLagCount) : null,
         totalWithTimes: totalLagCount,
+        totalSupportTime: totalLagSum,
       };
     }).sort((a, b) => b.issues.length - a.issues.length); // Sort by total issues handled in context
   }, [dailyIssues, monthlyIssues, yearlyIssues, timeReportMode]);
@@ -706,6 +707,7 @@ const Analytics: React.FC = () => {
                 <th className="px-5 py-3.5 text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap text-center">Avg Response Speed</th>
                 <th className="px-5 py-3.5 text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap text-center">Avg Resolution Speed</th>
                 <th className="px-5 py-3.5 text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap text-center">Avg Total Support Time</th>
+                <th className="px-5 py-3.5 text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap text-center">Total Support Time</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-150 dark:divide-slate-800">
@@ -753,12 +755,21 @@ const Analytics: React.FC = () => {
                             {formatDuration(data.avgTotalLag)}
                           </span>
                         </td>
+                        <td className="px-5 py-4 text-center whitespace-nowrap">
+                          <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
+                            data.totalSupportTime > 0
+                              ? 'bg-violet-50 dark:bg-violet-900/15 text-violet-605 dark:text-violet-400'
+                              : 'text-slate-400'
+                          }`}>
+                            {formatDuration(data.totalSupportTime)}
+                          </span>
+                        </td>
                       </tr>
 
                       {/* Expandable detailed ticket stats */}
                       {isExpanded && (
                         <tr>
-                          <td colSpan={5} className="px-6 py-4 bg-slate-50/60 dark:bg-slate-900/40">
+                          <td colSpan={6} className="px-6 py-4 bg-slate-50/60 dark:bg-slate-900/40">
                             <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-905 shadow-inner" onClick={(e) => e.stopPropagation()}>
                               <div className="p-4 bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                                 <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
