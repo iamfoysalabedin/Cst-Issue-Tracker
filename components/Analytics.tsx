@@ -770,8 +770,8 @@ const Analytics: React.FC = () => {
                       {isExpanded && (
                         <tr>
                           <td colSpan={6} className="px-6 py-4 bg-slate-50/60 dark:bg-slate-900/40">
-                            <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-905 shadow-inner" onClick={(e) => e.stopPropagation()}>
-                              <div className="p-4 bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                            <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-950 shadow-inner" onClick={(e) => e.stopPropagation()}>
+                              <div className="p-4 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                                 <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                                   Ticket Timeline Log for {data.person}
                                 </h4>
@@ -783,35 +783,32 @@ const Analytics: React.FC = () => {
                                 <table className="w-full text-left text-xs">
                                   <thead>
                                     <tr className="bg-slate-50/50 dark:bg-slate-800/20 border-b border-slate-200 dark:border-slate-800">
-                                      <th className="px-4 py-2.5 font-bold text-slate-500 whitespace-nowrap">ID & Client</th>
-                                      <th className="px-4 py-2.5 font-bold text-slate-500 whitespace-nowrap text-center">Issue Date and time</th>
-                                      <th className="px-4 py-2.5 font-bold text-slate-500 whitespace-nowrap text-center">Client Reporting Time</th>
-                                      <th className="px-4 py-2.5 font-bold text-slate-500 whitespace-nowrap text-center">Response Time</th>
-                                      <th className="px-4 py-2.5 font-bold text-slate-500 whitespace-nowrap text-center">Resolution Time</th>
-                                      <th className="px-4 py-2.5 font-bold text-slate-500 whitespace-nowrap text-center">Response Speed</th>
-                                      <th className="px-4 py-2.5 font-bold text-slate-500 whitespace-nowrap text-center">Resolution Speed</th>
-                                      <th className="px-4 py-2.5 font-bold text-slate-500 whitespace-nowrap text-center">Total Time</th>
+                                      <th className="px-4 py-2.5 font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">Client</th>
+                                      <th className="px-4 py-2.5 font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap text-center">Issue Date and time</th>
+                                      <th className="px-4 py-2.5 font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap text-center">Client Reporting Time</th>
+                                      <th className="px-4 py-2.5 font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap text-center">Response Time</th>
+                                      <th className="px-4 py-2.5 font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap text-center">Resolution Time</th>
+                                      <th className="px-4 py-2.5 font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap text-center">Response Speed</th>
+                                      <th className="px-4 py-2.5 font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap text-center">Resolution Speed</th>
+                                      <th className="px-4 py-2.5 font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap text-center">Total Time</th>
                                     </tr>
                                   </thead>
                                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                                     {data.issues.map((issue) => (
                                       <tr key={issue.id} className="hover:bg-slate-50/40 dark:hover:bg-slate-800/10 transition-colors">
-                                        <td className="px-4 py-3 font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap">
-                                          <div className="flex flex-col">
-                                            <span className="font-bold">#{issue.id}</span>
-                                            <span className="text-[10px] text-slate-400">{issue.client_name}</span>
-                                          </div>
+                                        <td className="px-4 py-3 font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">
+                                          {issue.client_name}
                                         </td>
-                                        <td className="px-4 py-3 text-slate-600 dark:text-slate-400 text-center whitespace-nowrap font-medium">
+                                        <td className="px-4 py-3 text-slate-900 dark:text-slate-100 text-center whitespace-nowrap font-semibold">
                                           {issue.issue_date || '-'}
                                         </td>
-                                        <td className="px-4 py-3 text-slate-600 dark:text-slate-400 text-center whitespace-nowrap font-medium">
+                                        <td className="px-4 py-3 text-slate-900 dark:text-slate-100 text-center whitespace-nowrap font-semibold">
                                           {issue.client_reporting_time || '-'}
                                         </td>
-                                        <td className="px-4 py-3 text-slate-600 dark:text-slate-400 text-center whitespace-nowrap font-medium">
+                                        <td className="px-4 py-3 text-slate-900 dark:text-slate-100 text-center whitespace-nowrap font-semibold">
                                           {issue.response_time || '-'}
                                         </td>
-                                        <td className="px-4 py-3 text-slate-600 dark:text-slate-400 text-center whitespace-nowrap font-medium">
+                                        <td className="px-4 py-3 text-slate-900 dark:text-slate-100 text-center whitespace-nowrap font-semibold">
                                           {issue.resolution_time || '-'}
                                         </td>
                                         <td className="px-4 py-3 text-center whitespace-nowrap">

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { dbService } from '../services/dbService';
 import { Issue, SystemDowntime } from '../types';
 import html2canvas from 'html2canvas';
@@ -18,7 +18,8 @@ import {
   CircleDot,
   Filter,
   Download,
-  FileDown
+  FileDown,
+  Clock
 } from 'lucide-react';
 import { PRIORITY_COLORS } from '../constants';
 
@@ -89,6 +90,77 @@ const WeeklyReport: React.FC = () => {
   });
 
   const totalDowntimeMinutes = filteredDowntime.reduce((acc, d) => acc + d.duration_minutes, 0);
+
+  const timeToMinutes = (timeStr: string): number | null => {
+    if (!timeStr) return null;
+    const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+    if (!match) return null;
+    let hours = parseInt(match[1], 10);
+    const minutes = parseInt(match[2], 10);
+    const ampm = match[3].toUpperCase();
+    if (ampm === 'PM' && hours < 12) {
+      hours += 12;
+    } else if (ampm === 'AM' && hours === 12) {
+      hours = 0;
+    }
+    return hours * 60 + minutes;
+  };
+
+  const formatDuration = (minutes: number | null): string => {
+    if (minutes === null || minutes < 0) return '-';
+    if (minutes < 60) return `${minutes} mins`;
+    const hrs = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return mins > 0 ? `${hrs}h ${mins}m` : `${hrs}h`;
+  };
+
+  const timePerformance = useMemo(() => {
+    let responseLagSum = 0;
+    let responseLagCount = 0;
+
+    let resolutionLagSum = 0;
+    let resolutionLagCount = 0;
+
+    let totalLagSum = 0;
+    let totalLagCount = 0;
+
+    filteredIssues.forEach(issue => {
+      const clientRepMin = timeToMinutes(issue.client_reporting_time || '');
+      const respMin = timeToMinutes(issue.response_time || '');
+      const resolMin = timeToMinutes(issue.resolution_time || '');
+
+      let responseLag: number | null = null;
+      let resolutionLag: number | null = null;
+      let totalLag: number | null = null;
+
+      if (clientRepMin !== null && respMin !== null) {
+        responseLag = respMin - clientRepMin;
+        if (responseLag < 0) responseLag += 24 * 60;
+        responseLagSum += responseLag;
+        responseLagCount++;
+      }
+      if (respMin !== null && resolMin !== null) {
+        resolutionLag = resolMin - respMin;
+        if (resolutionLag < 0) resolutionLag += 24 * 60;
+        resolutionLagSum += resolutionLag;
+        resolutionLagCount++;
+      }
+      if (clientRepMin !== null && resolMin !== null) {
+        totalLag = resolMin - clientRepMin;
+        if (totalLag < 0) totalLag += 24 * 60;
+        totalLagSum += totalLag;
+        totalLagCount++;
+      }
+    });
+
+    return {
+      avgResponseSpeed: responseLagCount > 0 ? Math.round(responseLagSum / responseLagCount) : null,
+      avgResolutionSpeed: resolutionLagCount > 0 ? Math.round(resolutionLagSum / resolutionLagCount) : null,
+      avgTotalSupportTime: totalLagCount > 0 ? Math.round(totalLagSum / totalLagCount) : null,
+      totalSupportTime: totalLagSum,
+      totalWithTimes: totalLagCount,
+    };
+  }, [filteredIssues]);
 
   const stats = [
     { label: 'Total Issues', value: filteredIssues.length, icon: AlertCircle, color: 'text-indigo-600', bg: 'bg-indigo-100 dark:bg-indigo-900/20' },
@@ -247,6 +319,80 @@ const WeeklyReport: React.FC = () => {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Weekly Time Performance Analytics */}
+      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm p-8 space-y-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 dark:border-slate-800 pb-6">
+          <div>
+            <h3 className="font-bold text-slate-900 dark:text-white text-xl flex items-center gap-2">
+              <Clock size={20} className="text-indigo-600" />
+              Weekly Time Performance Analytics
+            </h3>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+          {/* Card 1: Total Support Count */}
+          <div className="bg-slate-50/50 dark:bg-slate-800/25 p-5 rounded-2xl border border-slate-100 dark:border-slate-800/60 relative overflow-hidden group">
+            <div className="absolute -right-2 -top-2 w-16 h-16 bg-amber-50 dark:bg-amber-900/10 rounded-full transition-transform group-hover:scale-110" />
+            <div className="relative">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Total Support Count</span>
+              <h4 className="text-2xl font-black text-slate-900 dark:text-white font-black">
+                {timePerformance.totalWithTimes}
+              </h4>
+              <p className="text-[11px] text-slate-500 mt-2">Count of support tickets with valid durations</p>
+            </div>
+          </div>
+
+          {/* Card 2: Avg Response Speed */}
+          <div className="bg-slate-50/50 dark:bg-slate-800/25 p-5 rounded-2xl border border-slate-100 dark:border-slate-800/60 relative overflow-hidden group">
+            <div className="absolute -right-2 -top-2 w-16 h-16 bg-blue-50 dark:bg-blue-900/10 rounded-full transition-transform group-hover:scale-110" />
+            <div className="relative">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Avg Response Speed</span>
+              <h4 className="text-2xl font-black text-slate-900 dark:text-white">
+                {formatDuration(timePerformance.avgResponseSpeed)}
+              </h4>
+              <p className="text-[11px] text-slate-500 mt-2">Average time from report to first action</p>
+            </div>
+          </div>
+
+          {/* Card 3: Avg Resolution Speed */}
+          <div className="bg-slate-50/50 dark:bg-slate-800/25 p-5 rounded-2xl border border-slate-100 dark:border-slate-800/60 relative overflow-hidden group">
+            <div className="absolute -right-2 -top-2 w-16 h-16 bg-emerald-50 dark:bg-emerald-900/10 rounded-full transition-transform group-hover:scale-110" />
+            <div className="relative">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Avg Resolution Speed</span>
+              <h4 className="text-2xl font-black text-slate-900 dark:text-white">
+                {formatDuration(timePerformance.avgResolutionSpeed)}
+              </h4>
+              <p className="text-[11px] text-slate-500 mt-2">Average time from response to closure</p>
+            </div>
+          </div>
+
+          {/* Card 4: Avg Total Support Time */}
+          <div className="bg-slate-50/50 dark:bg-slate-800/25 p-5 rounded-2xl border border-slate-100 dark:border-slate-800/60 relative overflow-hidden group">
+            <div className="absolute -right-2 -top-2 w-16 h-16 bg-indigo-50 dark:bg-indigo-900/10 rounded-full transition-transform group-hover:scale-110" />
+            <div className="relative">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Avg Total Support Time</span>
+              <h4 className="text-2xl font-black text-slate-900 dark:text-white">
+                {formatDuration(timePerformance.avgTotalSupportTime)}
+              </h4>
+              <p className="text-[11px] text-slate-500 mt-2">Average full lifecycle of support tickets</p>
+            </div>
+          </div>
+
+          {/* Card 5: Total Support Time */}
+          <div className="bg-slate-50/50 dark:bg-slate-800/25 p-5 rounded-2xl border border-slate-100 dark:border-slate-800/60 relative overflow-hidden group">
+            <div className="absolute -right-2 -top-2 w-16 h-16 bg-violet-50 dark:bg-violet-900/10 rounded-full transition-transform group-hover:scale-110" />
+            <div className="relative">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Total Support Time</span>
+              <h4 className="text-2xl font-black text-slate-900 dark:text-white">
+                {formatDuration(timePerformance.totalSupportTime)}
+              </h4>
+              <p className="text-[11px] text-slate-500 mt-2">Sum of all active support durations combined</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Downtime Table */}
