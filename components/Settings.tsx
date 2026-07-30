@@ -6,6 +6,7 @@ import { Plus, Trash2, Settings as SettingsIcon, Edit2, Check, X } from 'lucide-
 
 const CATEGORIES: { id: SettingItem['category']; label: string }[] = [
   { id: 'issue_category', label: 'Categories' },
+  { id: 'segment', label: 'Segments' },
   { id: 'priority', label: 'Priorities' },
   { id: 'status', label: 'Statuses' },
   { id: 'assigned_person', label: 'Assigned Persons' },

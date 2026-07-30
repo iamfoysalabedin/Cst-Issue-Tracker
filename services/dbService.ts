@@ -29,6 +29,8 @@ const INITIAL_SETTINGS: Omit<SettingItem, 'id' | 'created_at'>[] = [
   { category: 'issue_category', name: 'Software' },
   { category: 'issue_category', name: 'Hardware' },
   { category: 'issue_category', name: 'Network' },
+  { category: 'segment', name: 'Segment A' },
+  { category: 'segment', name: 'Segment B' },
 ];
 
 export function parseIssueVirtualFields(issue: any): any {
@@ -60,6 +62,8 @@ export function parseIssueVirtualFields(issue: any): any {
   
   return {
     ...issue,
+    segment: issue.segment || '',
+    clickup_ticket_id: issue.clickup_ticket_id || '',
     issue_details: details,
     response_time: response_time || '',
     resolution_time: resolution_time || '',

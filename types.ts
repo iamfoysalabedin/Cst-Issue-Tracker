@@ -6,7 +6,7 @@ export type SystemType = string;
 
 export interface SettingItem {
   id: string;
-  category: 'issue_type' | 'priority' | 'status' | 'assigned_person' | 'system_name' | 'issue_category';
+  category: 'issue_type' | 'priority' | 'status' | 'assigned_person' | 'system_name' | 'issue_category' | 'segment';
   name: string;
   created_at: string;
 }
@@ -16,6 +16,8 @@ export interface Issue {
   client_name: string;
   issue_type: IssueType;
   category: string;
+  segment?: string;
+  clickup_ticket_id?: string;
   priority: Priority;
   status: Status;
   assigned_person: string;

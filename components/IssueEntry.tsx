@@ -38,6 +38,8 @@ const IssueEntry: React.FC = () => {
     client_name: '',
     issue_type: '',
     category: '',
+    segment: '',
+    clickup_ticket_id: '',
     priority: '',
     status: 'Open',
     assigned_person: '',
@@ -62,12 +64,14 @@ const IssueEntry: React.FC = () => {
   const [options, setOptions] = useState<{
     issueTypes: SettingItem[];
     categories: SettingItem[];
+    segments: SettingItem[];
     priorities: SettingItem[];
     statuses: SettingItem[];
     assignedPersons: SettingItem[];
   }>({
     issueTypes: [],
     categories: [],
+    segments: [],
     priorities: [],
     statuses: [],
     assignedPersons: [],
@@ -152,17 +156,19 @@ const IssueEntry: React.FC = () => {
   }, []);
 
   const loadOptions = async () => {
-    const [it, pr, st, ap, cat] = await Promise.all([
+    const [it, pr, st, ap, cat, seg] = await Promise.all([
       dbService.getSettingsByCategory('issue_type'),
       dbService.getSettingsByCategory('priority'),
       dbService.getSettingsByCategory('status'),
       dbService.getSettingsByCategory('assigned_person'),
       dbService.getSettingsByCategory('issue_category'),
+      dbService.getSettingsByCategory('segment'),
     ]);
 
     setOptions({
       issueTypes: it,
       categories: cat,
+      segments: seg,
       priorities: pr,
       statuses: st,
       assignedPersons: ap,
@@ -172,6 +178,7 @@ const IssueEntry: React.FC = () => {
       ...prev,
       issue_type: '',
       category: cat[0]?.name || '',
+      segment: seg[0]?.name || '',
       priority: pr[0]?.name || '',
       status: st[0]?.name || 'Open',
       assigned_person: ap[0]?.name || '',
@@ -240,6 +247,7 @@ const IssueEntry: React.FC = () => {
       setFormData(prev => ({
         ...prev,
         client_name: '',
+        clickup_ticket_id: '',
         issue_details: '',
         response_time: '',
         resolution_time: '',
@@ -313,6 +321,29 @@ const IssueEntry: React.FC = () => {
                 <option value="">Select Category</option>
                 {options.categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
               </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Segment</label>
+              <select 
+                value={formData.segment}
+                onChange={(e) => setFormData({...formData, segment: e.target.value})}
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs"
+              >
+                <option value="">Select Segment</option>
+                {options.segments.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">ClickUp Ticket ID</label>
+              <input 
+                type="text"
+                value={formData.clickup_ticket_id}
+                onChange={(e) => setFormData({...formData, clickup_ticket_id: e.target.value})}
+                placeholder="e.g. #8678xyz"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs"
+              />
             </div>
 
             <div className="space-y-1.5">

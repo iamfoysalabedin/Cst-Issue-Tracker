@@ -103,12 +103,14 @@ const IssueReports: React.FC = () => {
     issueTypes: SettingItem[];
     priorities: SettingItem[];
     categories: SettingItem[];
+    segments: SettingItem[];
     statuses: SettingItem[];
     assignedPersons: SettingItem[];
   }>({
     issueTypes: [],
     priorities: [],
     categories: [],
+    segments: [],
     statuses: [],
     assignedPersons: [],
   });
@@ -119,17 +121,19 @@ const IssueReports: React.FC = () => {
   }, []);
 
   const loadOptions = async () => {
-    const [it, pr, st, ap, cat] = await Promise.all([
+    const [it, pr, st, ap, cat, seg] = await Promise.all([
       dbService.getSettingsByCategory('issue_type'),
       dbService.getSettingsByCategory('priority'),
       dbService.getSettingsByCategory('status'),
       dbService.getSettingsByCategory('assigned_person'),
       dbService.getSettingsByCategory('issue_category'),
+      dbService.getSettingsByCategory('segment'),
     ]);
     setOptions({
       issueTypes: it,
       priorities: pr,
       categories: cat,
+      segments: seg,
       statuses: st,
       assignedPersons: ap,
     });
@@ -233,6 +237,8 @@ const IssueReports: React.FC = () => {
         const newIssues = data.map(row => ({
           client_name: row['Client Name'] || row['client_name'] || 'Unknown',
           issue_type: normalizeType(row['Issue Type'] || row['issue_type']),
+          segment: row['Segment'] || row['segment'] || '',
+          clickup_ticket_id: row['ClickUp Ticket ID'] || row['Clickup Ticket ID'] || row['clickup_ticket_id'] || '',
           category: row['Category'] || row['category'] || '',
           priority: row['Priority'] || row['priority'] || 'Medium',
           status: row['Status'] || row['status'] || 'Open',
@@ -267,6 +273,8 @@ const IssueReports: React.FC = () => {
       {
         'Client Name': 'Sample Client',
         'Issue Type': 'System Bugs',
+        'Segment': 'Segment A',
+        'ClickUp Ticket ID': '#8678xyz',
         'Category': 'Hardware',
         'Priority': 'High',
         'Status': 'Open',
@@ -305,7 +313,9 @@ const IssueReports: React.FC = () => {
 
   const filteredIssues = issues.filter(issue => {
     const matchesSearch = issue.client_name.toLowerCase().includes(search.toLowerCase()) || 
-                          issue.issue_details.toLowerCase().includes(search.toLowerCase());
+                          issue.issue_details.toLowerCase().includes(search.toLowerCase()) ||
+                          (issue.segment && issue.segment.toLowerCase().includes(search.toLowerCase())) ||
+                          (issue.clickup_ticket_id && issue.clickup_ticket_id.toLowerCase().includes(search.toLowerCase()));
     
     const issueDateStr = issue.issue_date || issue.created_at;
     const issueDateObj = new Date(issueDateStr);
@@ -335,6 +345,8 @@ const IssueReports: React.FC = () => {
       'Ticket ID',
       'Client Name',
       'Issue Type',
+      'Segment',
+      'ClickUp Ticket ID',
       'Category',
       'Priority',
       'Status',
@@ -351,6 +363,8 @@ const IssueReports: React.FC = () => {
       i.id || '',
       i.client_name || '',
       i.issue_type || '',
+      i.segment || '',
+      i.clickup_ticket_id || '',
       i.category || '',
       i.priority || '',
       i.status || '',
@@ -540,6 +554,8 @@ const IssueReports: React.FC = () => {
                 </th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Client</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Type</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Segment</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">ClickUp Ticket ID</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Category</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Priority</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
@@ -567,6 +583,12 @@ const IssueReports: React.FC = () => {
                     <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-md font-medium">
                       {issue.issue_type}
                     </span>
+                  </td>
+                  <td className="px-4 py-2.5 text-[10px] font-medium text-slate-600 dark:text-slate-400">
+                    {issue.segment || '-'}
+                  </td>
+                  <td className="px-4 py-2.5 text-xs font-mono font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                    {issue.clickup_ticket_id || '-'}
                   </td>
                   <td className="px-4 py-2.5 text-[10px] font-medium text-slate-600 dark:text-slate-400">
                     {issue.category}
@@ -605,7 +627,7 @@ const IssueReports: React.FC = () => {
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan={12} className="px-4 py-10 text-center text-slate-400 text-xs">
+                  <td colSpan={14} className="px-4 py-10 text-center text-slate-400 text-xs">
                     No issues found matching your criteria.
                   </td>
                 </tr>
@@ -685,6 +707,27 @@ const IssueReports: React.FC = () => {
                   >
                     {options.issueTypes.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
                   </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Segment</label>
+                  <select 
+                    value={editingIssue.segment || ''}
+                    onChange={(e) => setEditingIssue({...editingIssue, segment: e.target.value})}
+                    className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white text-xs"
+                  >
+                    <option value="">Select Segment</option>
+                    {options.segments.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">ClickUp Ticket ID</label>
+                  <input 
+                    type="text"
+                    value={editingIssue.clickup_ticket_id || ''}
+                    onChange={(e) => setEditingIssue({...editingIssue, clickup_ticket_id: e.target.value})}
+                    placeholder="e.g. #8678xyz"
+                    className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white text-xs"
+                  />
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-slate-400 uppercase">Category</label>
