@@ -198,12 +198,15 @@ const IssueReports: React.FC = () => {
         const data = XLSX.utils.sheet_to_json(ws) as any[];
 
         const normalizeType = (type: string) => {
-          const t = type?.toLowerCase() || '';
+          if (!type) return 'System Bugs';
+          const trimmed = String(type).trim();
+          if (!trimmed) return 'System Bugs';
+          const t = trimmed.toLowerCase();
           if (t.includes('bug')) return 'System Bugs';
           if (t.includes('device')) return 'Device Issues';
           if (t.includes('awareness')) return 'Awareness';
           if (t.includes('help') || t.includes('request')) return 'Help Requests';
-          return 'System Bugs';
+          return trimmed;
         };
 
         const parseDate = (dateVal: any) => {
@@ -552,19 +555,19 @@ const IssueReports: React.FC = () => {
                     {selectedIds.length === currentIssues.length && currentIssues.length > 0 ? <CheckSquare size={16} /> : <Square size={16} />}
                   </button>
                 </th>
-                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Client</th>
-                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Type</th>
-                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Segment</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Client</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Type</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Segment</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">ClickUp Ticket ID</th>
-                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Category</th>
-                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Priority</th>
-                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
-                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Assigned</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Category</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Priority</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Status</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Assigned</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Issue Date and time</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Client Reporting Time</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Response Time</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Resolution Time</th>
-                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Actions</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
@@ -579,31 +582,31 @@ const IssueReports: React.FC = () => {
                     <div className="font-semibold text-slate-900 dark:text-white text-xs">{issue.client_name}</div>
                     <div className="text-[10px] text-slate-400 truncate max-w-[180px]">{issue.issue_details}</div>
                   </td>
-                  <td className="px-4 py-2.5">
-                    <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-md font-medium">
+                  <td className="px-4 py-2.5 whitespace-nowrap">
+                    <span className="text-[10px] px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-md font-medium inline-block whitespace-nowrap">
                       {issue.issue_type}
                     </span>
                   </td>
-                  <td className="px-4 py-2.5 text-[10px] font-medium text-slate-600 dark:text-slate-400">
+                  <td className="px-4 py-2.5 text-[10px] font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
                     {issue.segment || '-'}
                   </td>
                   <td className="px-4 py-2.5 text-xs font-mono font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
                     {issue.clickup_ticket_id || '-'}
                   </td>
-                  <td className="px-4 py-2.5 text-[10px] font-medium text-slate-600 dark:text-slate-400">
+                  <td className="px-4 py-2.5 text-[10px] font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
                     {issue.category}
                   </td>
-                  <td className="px-4 py-2.5">
-                    <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase border ${(PRIORITY_COLORS as any)[issue.priority] || 'bg-slate-100'}`}>
+                  <td className="px-4 py-2.5 whitespace-nowrap">
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase border inline-block whitespace-nowrap ${(PRIORITY_COLORS as any)[issue.priority] || 'bg-slate-100'}`}>
                       {issue.priority}
                     </span>
                   </td>
-                  <td className="px-4 py-2.5">
-                    <span className={`text-[10px] font-semibold ${((STATUS_COLORS as any)[issue.status] || 'text-slate-600').split(' ')[1]}`}>
+                  <td className="px-4 py-2.5 whitespace-nowrap">
+                    <span className={`text-[10px] font-semibold inline-block whitespace-nowrap ${((STATUS_COLORS as any)[issue.status] || 'text-slate-600').split(' ')[1]}`}>
                       {issue.status}
                     </span>
                   </td>
-                  <td className="px-4 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400">{issue.assigned_person}</td>
+                  <td className="px-4 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">{issue.assigned_person}</td>
                   <td className="px-4 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">{formatIssueDateTime(issue.issue_date, issue.created_at)}</td>
                   <td className="px-4 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">{issue.client_reporting_time || '-'}</td>
                   <td className="px-4 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">{issue.response_time || '-'}</td>
