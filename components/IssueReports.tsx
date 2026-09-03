@@ -347,10 +347,11 @@ const IssueReports: React.FC = () => {
     const headers = [
       'Ticket ID',
       'Client Name',
+      'Issue Details',
       'Issue Type',
       'Segment',
-      'ClickUp Ticket ID',
       'Category',
+      'ClickUp Ticket ID',
       'Priority',
       'Status',
       'Assigned Handler',
@@ -358,17 +359,17 @@ const IssueReports: React.FC = () => {
       'Client Reporting Time',
       'Response Time',
       'Resolution Time',
-      'Issue Details',
       'System Log Time'
     ];
 
     const rows = filteredIssues.map(i => [
       i.id || '',
       i.client_name || '',
+      i.issue_details || '',
       i.issue_type || '',
       i.segment || '',
-      i.clickup_ticket_id || '',
       i.category || '',
+      i.clickup_ticket_id || '',
       i.priority || '',
       i.status || '',
       i.assigned_person || '',
@@ -376,7 +377,6 @@ const IssueReports: React.FC = () => {
       i.client_reporting_time || '',
       i.response_time || '',
       i.resolution_time || '',
-      i.issue_details || '',
       i.created_at ? new Date(i.created_at).toLocaleString() : ''
     ]);
 
@@ -387,8 +387,11 @@ const IssueReports: React.FC = () => {
     const wscols = [
       { wch: 12 },  // Ticket ID
       { wch: 25 },  // Client Name
+      { wch: 55 },  // Issue Details (placed prominently beside Client Name)
       { wch: 18 },  // Issue Type
+      { wch: 15 },  // Segment
       { wch: 15 },  // Category
+      { wch: 18 },  // ClickUp Ticket ID
       { wch: 12 },  // Priority
       { wch: 12 },  // Status
       { wch: 22 },  // Assigned Handler
@@ -396,7 +399,6 @@ const IssueReports: React.FC = () => {
       { wch: 22 },  // Client Reporting Time
       { wch: 18 },  // Response Time
       { wch: 18 },  // Resolution Time
-      { wch: 45 },  // Issue Details (widened for easy reading of log details)
       { wch: 22 }   // System Log Time
     ];
     ws['!cols'] = wscols;
