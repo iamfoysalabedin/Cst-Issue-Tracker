@@ -54,7 +54,7 @@ const MonthlyReports: React.FC = () => {
             }`}
           >
             <Building2 size={16} />
-            <span>Client Issue Report (3-Month / Custom Date)</span>
+            <span>Client-Wise Issue Report</span>
           </button>
           <button
             onClick={() => setActiveTab('monthlySummary')}

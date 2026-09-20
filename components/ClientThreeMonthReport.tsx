@@ -461,7 +461,7 @@ export const ClientThreeMonthReport: React.FC<ClientThreeMonthReportProps> = ({
 
     const startStr = formatDateDisplay(startDate).replace(/\s+/g, '_');
     const endStr = formatDateDisplay(endDate).replace(/\s+/g, '_');
-    const filename = `Clients_Issue_Report_${startStr}_to_${endStr}.xlsx`;
+    const filename = `Client_Wise_Issue_Report_${startStr}_to_${endStr}.xlsx`;
 
     XLSX.writeFile(wb, filename);
   };
@@ -545,14 +545,14 @@ export const ClientThreeMonthReport: React.FC<ClientThreeMonthReportProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-bold text-slate-900 dark:text-white text-xl">
-                  Client 3-Month Issue Report & History
+                  Client-Wise Issue Report
                 </h3>
                 <span className="bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-xs font-bold px-2.5 py-0.5 rounded-full">
-                  Client Logs
+                  Client Report
                 </span>
               </div>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                Past 3 months client issue breakdown (default) with custom date selection, click-to-expand details, and batch Excel export.
+                Client-wise detailed issue breakdown with custom date selection, click-to-expand ticket logs, and Excel export.
               </p>
             </div>
           </div>

@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { dbService } from '../services/dbService';
 import { SettingItem } from '../types';
-import { CheckCircle, AlertCircle } from 'lucide-react';
+import { CheckCircle, AlertCircle, Building2, Sparkles } from 'lucide-react';
 
 const convert24hTo12h = (time24: string): string => {
   if (!time24) return '';
@@ -81,6 +81,13 @@ const IssueEntry: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  // Client suggestions state
+  const [knownClients, setKnownClients] = useState<{ name: string; count: number }[]>([]);
+  const [showClientSuggestions, setShowClientSuggestions] = useState(false);
+  const [highlightedClientIndex, setHighlightedClientIndex] = useState(-1);
+  const clientContainerRef = useRef<HTMLDivElement>(null);
+  const clientInputRef = useRef<HTMLInputElement>(null);
+
   const [useLiveTime, setUseLiveTime] = useState(true);
   const [manualDate, setManualDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [manualTime, setManualTime] = useState(() => {
@@ -156,13 +163,14 @@ const IssueEntry: React.FC = () => {
   }, []);
 
   const loadOptions = async () => {
-    const [it, pr, st, ap, cat, seg] = await Promise.all([
+    const [it, pr, st, ap, cat, seg, clients] = await Promise.all([
       dbService.getSettingsByCategory('issue_type'),
       dbService.getSettingsByCategory('priority'),
       dbService.getSettingsByCategory('status'),
       dbService.getSettingsByCategory('assigned_person'),
       dbService.getSettingsByCategory('issue_category'),
       dbService.getSettingsByCategory('segment'),
+      dbService.getClientNames(),
     ]);
 
     setOptions({
@@ -173,6 +181,8 @@ const IssueEntry: React.FC = () => {
       statuses: st,
       assignedPersons: ap,
     });
+    setKnownClients(clients);
+
     // Set initial defaults
     setFormData(prev => ({
       ...prev,
@@ -183,6 +193,65 @@ const IssueEntry: React.FC = () => {
       status: st[0]?.name || 'Open',
       assigned_person: ap[0]?.name || '',
     }));
+  };
+
+  // Filter client suggestions based on user input
+  const filteredClientSuggestions = useMemo(() => {
+    const query = formData.client_name.trim().toLowerCase();
+    if (!query) return [];
+    return knownClients
+      .filter(c => c.name.toLowerCase().includes(query))
+      .slice(0, 8); // Top 8 matching clients
+  }, [knownClients, formData.client_name]);
+
+  // Handle clicking outside to dismiss suggestion dropdown
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (clientContainerRef.current && !clientContainerRef.current.contains(e.target as Node)) {
+        setShowClientSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleSelectClient = (clientName: string) => {
+    setFormData(prev => ({ ...prev, client_name: clientName }));
+    setShowClientSuggestions(false);
+    setHighlightedClientIndex(-1);
+  };
+
+  const handleClientKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showClientSuggestions || filteredClientSuggestions.length === 0) {
+      if (e.key === 'ArrowDown' && filteredClientSuggestions.length > 0) {
+        setShowClientSuggestions(true);
+        setHighlightedClientIndex(0);
+        e.preventDefault();
+      }
+      return;
+    }
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHighlightedClientIndex(prev => 
+        prev < filteredClientSuggestions.length - 1 ? prev + 1 : 0
+      );
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlightedClientIndex(prev => 
+        prev > 0 ? prev - 1 : filteredClientSuggestions.length - 1
+      );
+    } else if (e.key === 'Enter') {
+      if (highlightedClientIndex >= 0 && highlightedClientIndex < filteredClientSuggestions.length) {
+        e.preventDefault();
+        handleSelectClient(filteredClientSuggestions[highlightedClientIndex].name);
+      }
+    } else if (e.key === 'Escape') {
+      setShowClientSuggestions(false);
+      setHighlightedClientIndex(-1);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -243,7 +312,25 @@ const IssueEntry: React.FC = () => {
         }
       }
 
+      // Update local knownClients immediately so subsequent entries suggest this client
+      const clientTrimmed = formData.client_name.trim();
+      if (clientTrimmed) {
+        setKnownClients(prev => {
+          const exists = prev.find(c => c.name.toLowerCase() === clientTrimmed.toLowerCase());
+          if (exists) {
+            return prev.map(c => 
+              c.name.toLowerCase() === clientTrimmed.toLowerCase() 
+                ? { ...c, count: c.count + 1 } 
+                : c
+            );
+          }
+          return [{ name: clientTrimmed, count: 1 }, ...prev];
+        });
+      }
+
       setSuccess(true);
+      setShowClientSuggestions(false);
+      setHighlightedClientIndex(-1);
       setFormData(prev => ({
         ...prev,
         client_name: '',
@@ -263,8 +350,8 @@ const IssueEntry: React.FC = () => {
 
   return (
     <div className="max-w-xl mx-auto animate-in slide-in-from-bottom-4 duration-500">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg overflow-hidden">
-        <div className="gradient-bg p-5 text-white">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg relative">
+        <div className="gradient-bg p-5 text-white rounded-t-2xl">
           <h2 className="text-lg font-bold">New Issue Report</h2>
           <p className="opacity-80 text-[11px] mt-0.5">Submit a detailed report to help our team investigate.</p>
         </div>
@@ -285,15 +372,95 @@ const IssueEntry: React.FC = () => {
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Client Name *</label>
-              <input 
-                type="text"
-                value={formData.client_name}
-                onChange={(e) => setFormData({...formData, client_name: e.target.value})}
-                placeholder="e.g. Acme Corp"
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs"
-              />
+            <div ref={clientContainerRef} className="space-y-1.5 relative">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  Client Name *
+                </label>
+                {knownClients.length > 0 && (
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 flex items-center gap-1 font-medium">
+                    <Building2 size={10} className="text-indigo-500" />
+                    {knownClients.length} clients
+                  </span>
+                )}
+              </div>
+              <div className="relative">
+                <input 
+                  ref={clientInputRef}
+                  type="text"
+                  value={formData.client_name}
+                  onChange={(e) => {
+                    setFormData({ ...formData, client_name: e.target.value });
+                    setShowClientSuggestions(true);
+                    setHighlightedClientIndex(-1);
+                  }}
+                  onFocus={() => {
+                    if (formData.client_name.trim().length > 0) {
+                      setShowClientSuggestions(true);
+                    }
+                  }}
+                  onKeyDown={handleClientKeyDown}
+                  placeholder="e.g. Acme Corp"
+                  autoComplete="off"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs"
+                />
+
+                {/* Suggestions Dropdown */}
+                {showClientSuggestions && filteredClientSuggestions.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl overflow-hidden z-50 animate-in fade-in-50 zoom-in-95 duration-150">
+                    <div className="px-3 py-1.5 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                      <span className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 font-semibold">
+                        <Sparkles size={11} />
+                        Existing Clients ({filteredClientSuggestions.length})
+                      </span>
+                      <span className="text-[9px] text-slate-400 dark:text-slate-500">↑↓ select, ↵ pick</span>
+                    </div>
+                    <div className="max-h-56 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
+                      {filteredClientSuggestions.map((item, index) => {
+                        const isHighlighted = highlightedClientIndex === index;
+                        const query = formData.client_name.trim().toLowerCase();
+                        const idx = item.name.toLowerCase().indexOf(query);
+
+                        return (
+                          <button
+                            key={item.name}
+                            type="button"
+                            onClick={() => handleSelectClient(item.name)}
+                            onMouseEnter={() => setHighlightedClientIndex(index)}
+                            className={`w-full px-3 py-2 text-left flex items-center justify-between transition-colors ${
+                              isHighlighted
+                                ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-950 dark:text-indigo-100'
+                                : 'hover:bg-slate-50 dark:hover:bg-slate-800/70 text-slate-800 dark:text-slate-200'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 min-w-0 pr-2">
+                              <div className={`p-1 rounded-md shrink-0 ${isHighlighted ? 'bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`}>
+                                <Building2 size={12} />
+                              </div>
+                              <span className="text-xs truncate font-medium">
+                                {idx >= 0 ? (
+                                  <>
+                                    {item.name.substring(0, idx)}
+                                    <span className="font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-0.5 rounded">
+                                      {item.name.substring(idx, idx + query.length)}
+                                    </span>
+                                    {item.name.substring(idx + query.length)}
+                                  </>
+                                ) : (
+                                  item.name
+                                )}
+                              </span>
+                            </div>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 shrink-0 font-medium">
+                              {item.count} {item.count === 1 ? 'issue' : 'issues'}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="space-y-1.5">

@@ -192,6 +192,66 @@ export const dbService = {
     return allData.map(item => parseIssueVirtualFields(item)) as Issue[];
   },
 
+  async getClientNames(): Promise<{ name: string; count: number }[]> {
+    try {
+      const { data, error } = await supabase
+        .from('issues')
+        .select('client_name')
+        .not('client_name', 'is', null);
+
+      if (error) {
+        console.error('Error fetching client names from Supabase:', error);
+      }
+
+      const clientCounts = new Map<string, number>();
+      if (data && data.length > 0) {
+        data.forEach(item => {
+          const name = (item.client_name || '').trim();
+          if (name) {
+            clientCounts.set(name, (clientCounts.get(name) || 0) + 1);
+          }
+        });
+      }
+
+      // Check localStorage for previously remembered client names
+      try {
+        const cached = localStorage.getItem('known_client_names');
+        if (cached) {
+          const parsed: string[] = JSON.parse(cached);
+          parsed.forEach(name => {
+            const trimmed = (name || '').trim();
+            if (trimmed && !clientCounts.has(trimmed)) {
+              clientCounts.set(trimmed, 1);
+            }
+          });
+        }
+      } catch (e) {}
+
+      const result = Array.from(clientCounts.entries()).map(([name, count]) => ({
+        name,
+        count
+      })).sort((a, b) => {
+        if (b.count !== a.count) return b.count - a.count;
+        return a.name.localeCompare(b.name);
+      });
+
+      try {
+        localStorage.setItem('known_client_names', JSON.stringify(result.map(r => r.name)));
+      } catch (e) {}
+
+      return result;
+    } catch (err) {
+      console.error('Failed to get client names:', err);
+      try {
+        const cached = localStorage.getItem('known_client_names');
+        if (cached) {
+          return JSON.parse(cached).map((name: string) => ({ name, count: 1 }));
+        }
+      } catch (e) {}
+      return [];
+    }
+  },
+
   async saveIssue(issue: Omit<Issue, 'id' | 'created_at' | 'updated_at'> & { created_at?: string }): Promise<Issue> {
     const serialized = serializeIssueVirtualFields(issue);
     console.log('Attempting to save issue to Supabase:', serialized);
@@ -208,6 +268,19 @@ export const dbService = {
       console.error('Supabase Insert returned no data');
       throw new Error('No data returned from Supabase after insert');
     }
+
+    try {
+      const name = (issue.client_name || '').trim();
+      if (name) {
+        const cached = localStorage.getItem('known_client_names');
+        const list: string[] = cached ? JSON.parse(cached) : [];
+        if (!list.some(n => n.toLowerCase() === name.toLowerCase())) {
+          list.push(name);
+          localStorage.setItem('known_client_names', JSON.stringify(list));
+        }
+      }
+    } catch (e) {}
+
     console.log('Successfully saved to Supabase:', data[0]);
     return parseIssueVirtualFields(data[0]) as Issue;
   },
