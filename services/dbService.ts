@@ -1,6 +1,32 @@
 
-import { Issue, MonthlyEntry, SystemDowntime, SettingItem } from '../types';
+import { Issue, MonthlyEntry, SystemDowntime, SettingItem, BrandingConfig } from '../types';
 import { supabase } from '../lib/supabase';
+
+export const DEFAULT_BRANDING: BrandingConfig = {
+  id: 'default',
+  brand_name: 'Issue Tracker',
+  subtitle: 'INOVACE',
+  logo_url: null,
+};
+
+export function applyFaviconAndTitle(branding: Partial<BrandingConfig>): void {
+  if (typeof document === 'undefined') return;
+
+  if (branding.brand_name) {
+    document.title = branding.brand_name;
+  }
+
+  const faviconUrl = branding.logo_url;
+  if (faviconUrl) {
+    let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
+      document.head.appendChild(link);
+    }
+    link.href = faviconUrl;
+  }
+}
 
 // Default initial settings
 const INITIAL_SETTINGS: Omit<SettingItem, 'id' | 'created_at'>[] = [
@@ -410,6 +436,103 @@ export const dbService = {
     
     if (error) throw error;
     return data as SystemDowntime;
+  },
+
+  // Branding & Logo
+  getCachedBranding(): BrandingConfig {
+    try {
+      const cached = localStorage.getItem('app_branding');
+      if (cached) {
+        return { ...DEFAULT_BRANDING, ...JSON.parse(cached) };
+      }
+    } catch (e) {}
+    return DEFAULT_BRANDING;
+  },
+
+  async getBranding(): Promise<BrandingConfig> {
+    const cached = this.getCachedBranding();
+    try {
+      const { data, error } = await supabase
+        .from('branding_settings')
+        .select('*')
+        .eq('id', 'default')
+        .maybeSingle();
+
+      if (error) {
+        console.warn('Could not fetch branding from Supabase, using local settings:', error.message);
+        return cached;
+      }
+
+      if (data) {
+        const branding: BrandingConfig = {
+          id: data.id || 'default',
+          brand_name: data.brand_name || DEFAULT_BRANDING.brand_name,
+          subtitle: data.subtitle !== undefined ? data.subtitle : DEFAULT_BRANDING.subtitle,
+          logo_url: data.logo_url || null,
+          updated_at: data.updated_at
+        };
+        try {
+          localStorage.setItem('app_branding', JSON.stringify(branding));
+        } catch (e) {}
+        applyFaviconAndTitle(branding);
+        return branding;
+      }
+    } catch (err) {
+      console.warn('Error connecting to Supabase branding table:', err);
+    }
+    return cached;
+  },
+
+  async saveBranding(branding: { brand_name: string; subtitle: string; logo_url: string | null }): Promise<BrandingConfig> {
+    const updated: BrandingConfig = {
+      id: 'default',
+      brand_name: branding.brand_name.trim() || DEFAULT_BRANDING.brand_name,
+      subtitle: branding.subtitle.trim(),
+      logo_url: branding.logo_url || null,
+      updated_at: new Date().toISOString()
+    };
+
+    // Cache locally immediately so user sees immediate results
+    try {
+      localStorage.setItem('app_branding', JSON.stringify(updated));
+    } catch (e) {}
+    applyFaviconAndTitle(updated);
+
+    // Notify components (like Layout) instantly
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('branding-changed', { detail: updated }));
+    }
+
+    // Upsert into Supabase branding_settings table
+    try {
+      const { data, error } = await supabase
+        .from('branding_settings')
+        .upsert({
+          id: 'default',
+          brand_name: updated.brand_name,
+          subtitle: updated.subtitle,
+          logo_url: updated.logo_url,
+          updated_at: updated.updated_at
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Failed to save branding in Supabase table (please ensure SQL table is created):', error);
+      } else if (data) {
+        return {
+          id: data.id,
+          brand_name: data.brand_name,
+          subtitle: data.subtitle,
+          logo_url: data.logo_url,
+          updated_at: data.updated_at
+        };
+      }
+    } catch (err) {
+      console.error('Error saving branding to Supabase:', err);
+    }
+
+    return updated;
   }
 };
 

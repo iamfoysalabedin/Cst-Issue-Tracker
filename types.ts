@@ -11,6 +11,14 @@ export interface SettingItem {
   created_at: string;
 }
 
+export interface BrandingConfig {
+  id?: string;
+  brand_name: string;
+  subtitle: string;
+  logo_url: string | null;
+  updated_at?: string;
+}
+
 export interface Issue {
   id: string;
   client_name: string;

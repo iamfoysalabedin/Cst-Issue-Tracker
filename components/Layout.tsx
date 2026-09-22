@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { dbService, applyFaviconAndTitle } from '../services/dbService';
+import { BrandingConfig } from '../types';
 import { 
   LayoutDashboard, 
   PlusCircle, 
@@ -26,10 +28,32 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const location = useLocation();
+  const [branding, setBranding] = useState<BrandingConfig>(() => dbService.getCachedBranding());
   const [isDarkMode, setIsDarkMode] = useState(() => {
     return localStorage.getItem('theme') === 'dark' || 
       (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
   });
+
+  useEffect(() => {
+    applyFaviconAndTitle(branding);
+
+    dbService.getBranding().then((b) => {
+      setBranding(b);
+      applyFaviconAndTitle(b);
+    });
+
+    const handleBrandingChange = (e: any) => {
+      if (e.detail) {
+        setBranding(e.detail);
+        applyFaviconAndTitle(e.detail);
+      }
+    };
+
+    window.addEventListener('branding-changed', handleBrandingChange);
+    return () => {
+      window.removeEventListener('branding-changed', handleBrandingChange);
+    };
+  }, []);
 
   useEffect(() => {
     if (isDarkMode) {
@@ -77,15 +101,34 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <div className="flex flex-col h-full">
-          {/* Logo */}
+          {/* Logo & Brand Name */}
           <div className="p-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/50">
-            <div>
-              <h1 className="font-bold text-lg tracking-tight text-slate-900 dark:text-white leading-none">Issue Tracker</h1>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">INOVACE</span>
+            <div className="flex items-center gap-2.5 min-w-0">
+              {branding.logo_url ? (
+                <img 
+                  src={branding.logo_url} 
+                  alt={branding.brand_name || 'Brand Logo'} 
+                  className="w-8 h-8 rounded-lg object-contain bg-white dark:bg-slate-800 p-0.5 border border-slate-200 dark:border-slate-700 shadow-xs shrink-0" 
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-xs shrink-0">
+                  {(branding.brand_name || 'I').charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div className="min-w-0">
+                <h1 className="font-bold text-base tracking-tight text-slate-900 dark:text-white leading-tight truncate">
+                  {branding.brand_name || 'Issue Tracker'}
+                </h1>
+                {branding.subtitle ? (
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.18em] truncate block mt-0.5">
+                    {branding.subtitle}
+                  </span>
+                ) : null}
+              </div>
             </div>
             <button 
               onClick={() => setIsSidebarOpen(false)}
-              className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 lg:hidden"
+              className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 lg:hidden shrink-0 ml-1"
             >
               <X size={18} />
             </button>
