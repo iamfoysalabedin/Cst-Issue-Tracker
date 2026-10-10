@@ -16,7 +16,6 @@ import {
   ArrowRight, 
   RotateCcw,
   Sparkles,
-  Info,
   Database,
   Copy,
   Check,
@@ -266,34 +265,6 @@ export const AddSales: React.FC = () => {
         <div className="flex-1">
           <SalesHeader />
         </div>
-      </div>
-
-      {/* Database Setup Bar */}
-      <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-indigo-500/10 border border-emerald-500/20 dark:border-emerald-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-            <Database size={16} />
-          </div>
-          <div>
-            <div className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-              <span>Supabase Cloud Database Integration</span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">
-                Connected
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-              Sales entries save directly into your Supabase Postgres database (<code className="px-1 py-0.5 bg-slate-100 dark:bg-slate-800 rounded font-mono">public.sales</code>).
-            </p>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={() => setShowSqlModal(true)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 font-semibold shadow-xs text-xs transition-colors shrink-0"
-        >
-          <Code2 size={14} />
-          <span>View / Copy Table SQL</span>
-        </button>
       </div>
 
       {/* Success Notification Banner */}
@@ -856,13 +827,6 @@ export const AddSales: React.FC = () => {
                   <RotateCcw size={14} />
                   <span>Reset Form</span>
                 </button>
-              </div>
-
-              <div className="flex items-start gap-2 text-[11px] text-slate-400 bg-slate-50/50 dark:bg-slate-800/30 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800">
-                <Info size={13} className="shrink-0 mt-0.5 text-indigo-500" />
-                <span>
-                  Adding a sale will automatically sync to Supabase and update the Sales Dashboard and Sales Report.
-                </span>
               </div>
             </div>
           </div>

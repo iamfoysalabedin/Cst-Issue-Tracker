@@ -487,8 +487,26 @@ export const SalesDashboard: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-              {recentSales.map((sale) => (
-                <tr key={sale.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+              {recentSales.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-slate-400">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <ShoppingBag size={32} className="text-slate-300 dark:text-slate-700" />
+                      <p className="font-semibold text-slate-600 dark:text-slate-400">No sales recorded yet</p>
+                      <p className="text-xs text-slate-400">Add your first sales deal to view real-time metrics and charts</p>
+                      <Link
+                        to="/sales/add"
+                        className="mt-2 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white font-bold text-xs shadow-xs hover:bg-emerald-700 transition-colors"
+                      >
+                        <PlusCircle size={14} />
+                        <span>+ Add New Sale</span>
+                      </Link>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                recentSales.map((sale) => (
+                  <tr key={sale.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
                   <td className="py-3.5 px-4">
                     <span className="font-bold text-slate-900 dark:text-white block font-mono">
                       {sale.sale_id}
@@ -533,7 +551,7 @@ export const SalesDashboard: React.FC = () => {
                     </span>
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>

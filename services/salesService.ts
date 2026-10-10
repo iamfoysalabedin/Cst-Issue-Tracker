@@ -134,324 +134,15 @@ export const SALES_REPRESENTATIVES = [
   'Fariha',
 ];
 
-const INITIAL_SALES: SalesRecord[] = [
-  {
-    id: 'sale-001',
-    sale_id: 'SL-2026-001',
-    date: '2026-03-02',
-    company_name: 'Apex Footwear Ltd.',
-    contact_person_name: 'Tanvir Hossain',
-    contact_person_number: '+880 1711-456789',
-    products: [
-      {
-        id: 'p-1',
-        name: 'Face Recognition Terminal (FacePass Pro)',
-        unit_price: 28500,
-        quantity: 2,
-        subtotal: 57000,
-      },
-      {
-        id: 'p-2',
-        name: 'RFID Smart Cards (Pack of 100)',
-        unit_price: 3500,
-        quantity: 5,
-        subtotal: 17500,
-      },
-    ],
-    saas_package: 'Enterprise (Unlimited Users)',
-    saas_package_price: 18000,
-    discount: 2500,
-    total_value: 90000,
-    sold_by: 'Fuad',
-    payment_status: 'Paid',
-    notes: 'Full deployment done across Gazipur factory premises.',
-    created_at: '2026-03-02T10:15:00Z',
-    updated_at: '2026-03-02T10:15:00Z',
-  },
-  {
-    id: 'sale-002',
-    sale_id: 'SL-2026-002',
-    date: '2026-03-08',
-    company_name: 'Beximco Pharma Ltd.',
-    contact_person_name: 'Dr. Shahinur Alam',
-    contact_person_number: '+880 1819-234567',
-    products: [
-      {
-        id: 'p-3',
-        name: 'Biometric Attendance Device (IN-Bio 400)',
-        unit_price: 16500,
-        quantity: 4,
-        subtotal: 66000,
-      },
-      {
-        id: 'p-4',
-        name: 'Access Control Magnetic Door Lock Kit',
-        unit_price: 8500,
-        quantity: 4,
-        subtotal: 34000,
-      },
-    ],
-    saas_package: 'Professional (Up to 250 Users)',
-    saas_package_price: 8500,
-    discount: 3500,
-    total_value: 105000,
-    sold_by: 'Rahat',
-    payment_status: 'Paid',
-    notes: 'Tongie facility access control expansion.',
-    created_at: '2026-03-08T14:30:00Z',
-    updated_at: '2026-03-08T14:30:00Z',
-  },
-  {
-    id: 'sale-003',
-    sale_id: 'SL-2026-003',
-    date: '2026-03-15',
-    company_name: 'Square Textiles PLC',
-    contact_person_name: 'Khandaker Rafiq',
-    contact_person_number: '+880 1912-987654',
-    products: [
-      {
-        id: 'p-5',
-        name: 'Cloud HRM & Payroll Software License',
-        unit_price: 45000,
-        quantity: 1,
-        subtotal: 45000,
-      },
-      {
-        id: 'p-6',
-        name: 'Mobile Attendance App Addon (Android/iOS)',
-        unit_price: 12000,
-        quantity: 1,
-        subtotal: 12000,
-      },
-      {
-        id: 'p-7',
-        name: 'On-site Installation & Training Package',
-        unit_price: 8000,
-        quantity: 1,
-        subtotal: 8000,
-      },
-    ],
-    saas_package: 'Enterprise (Unlimited Users)',
-    saas_package_price: 18000,
-    discount: 5000,
-    total_value: 78000,
-    sold_by: 'Foysal',
-    payment_status: 'Partial',
-    notes: 'Advance 50% paid, remaining after UAT approval.',
-    created_at: '2026-03-15T09:00:00Z',
-    updated_at: '2026-03-15T09:00:00Z',
-  },
-  {
-    id: 'sale-004',
-    sale_id: 'SL-2026-004',
-    date: '2026-03-21',
-    company_name: 'Akij Food & Beverage Ltd.',
-    contact_person_name: 'Mohammad Faruk',
-    contact_person_number: '+880 1613-445566',
-    products: [
-      {
-        id: 'p-8',
-        name: 'GPS Vehicle Tracking Device (Fleet Pro)',
-        unit_price: 6500,
-        quantity: 8,
-        subtotal: 52000,
-      },
-    ],
-    saas_package: 'Custom Enterprise Suite',
-    saas_package_price: 25000,
-    discount: 2000,
-    total_value: 75000,
-    sold_by: 'Taqi',
-    payment_status: 'Paid',
-    notes: 'Distribution truck tracking rollout.',
-    created_at: '2026-03-21T11:45:00Z',
-    updated_at: '2026-03-21T11:45:00Z',
-  },
-  {
-    id: 'sale-005',
-    sale_id: 'SL-2026-005',
-    date: '2026-03-28',
-    company_name: 'Walton Hi-Tech Industries',
-    contact_person_name: 'Engr. Nazmul Haque',
-    contact_person_number: '+880 1713-112233',
-    products: [
-      {
-        id: 'p-9',
-        name: 'Face Recognition Terminal (FacePass Pro)',
-        unit_price: 28500,
-        quantity: 3,
-        subtotal: 85500,
-      },
-      {
-        id: 'p-10',
-        name: 'Annual Maintenance Contract (AMC)',
-        unit_price: 24000,
-        quantity: 1,
-        subtotal: 24000,
-      },
-    ],
-    saas_package: 'Enterprise (Unlimited Users)',
-    saas_package_price: 18000,
-    discount: 7500,
-    total_value: 120000,
-    sold_by: 'Fariha',
-    payment_status: 'Paid',
-    notes: 'Chandra HQ gate upgrade with AMC coverage.',
-    created_at: '2026-03-28T16:20:00Z',
-    updated_at: '2026-03-28T16:20:00Z',
-  },
-  {
-    id: 'sale-006',
-    sale_id: 'SL-2026-006',
-    date: '2026-04-02',
-    company_name: 'Pran-RFL Group',
-    contact_person_name: 'Saiful Islam',
-    contact_person_number: '+880 1817-778899',
-    products: [
-      {
-        id: 'p-11',
-        name: 'Biometric Attendance Device (IN-Bio 400)',
-        unit_price: 16500,
-        quantity: 2,
-        subtotal: 33000,
-      },
-      {
-        id: 'p-12',
-        name: 'RFID Smart Cards (Pack of 100)',
-        unit_price: 3500,
-        quantity: 2,
-        subtotal: 7000,
-      },
-    ],
-    saas_package: 'Starter (Up to 50 Users)',
-    saas_package_price: 3500,
-    discount: 500,
-    total_value: 43000,
-    sold_by: 'Fuad',
-    payment_status: 'Due',
-    notes: 'Invoice generated, net 15 days payment terms.',
-    created_at: '2026-04-02T13:10:00Z',
-    updated_at: '2026-04-02T13:10:00Z',
-  },
-  {
-    id: 'sale-007',
-    sale_id: 'SL-2026-007',
-    date: '2026-04-05',
-    company_name: 'ACI Logistics (Shwapno)',
-    contact_person_name: 'Ferdous Ahmed',
-    contact_person_number: '+880 1711-234567',
-    products: [
-      {
-        id: 'p-13',
-        name: 'Handheld POS Barcode Scanner (Wireless)',
-        unit_price: 8500,
-        quantity: 4,
-        subtotal: 34000,
-      },
-    ],
-    saas_package: 'Standard (Up to 200 Users)',
-    saas_package_price: 7500,
-    discount: 0,
-    total_value: 41500,
-    sold_by: 'Rahat',
-    payment_status: 'Paid',
-    notes: 'Deployment for 4 new outlet checkout counters.',
-    created_at: '2026-04-05T11:00:00Z',
-    updated_at: '2026-04-05T11:00:00Z',
-  },
-  {
-    id: 'sale-008',
-    sale_id: 'SL-2026-008',
-    date: '2026-04-08',
-    company_name: 'Beximco Pharmaceuticals',
-    contact_person_name: 'Dr. Mahbubur Rahman',
-    contact_person_number: '+880 1912-345678',
-    products: [
-      {
-        id: 'p-14',
-        name: 'Face Recognition Terminal (FacePass Pro)',
-        unit_price: 28500,
-        quantity: 2,
-        subtotal: 57000,
-      },
-      {
-        id: 'p-15',
-        name: 'Smart Access Turnstile Gate (Flap Barrier)',
-        unit_price: 85000,
-        quantity: 1,
-        subtotal: 85000,
-      },
-    ],
-    saas_package: 'Enterprise (Unlimited Users)',
-    saas_package_price: 18000,
-    discount: 5000,
-    total_value: 155000,
-    sold_by: 'Foysal',
-    payment_status: 'Paid',
-    notes: 'Factory main entrance access control installation.',
-    created_at: '2026-04-08T15:30:00Z',
-    updated_at: '2026-04-08T15:30:00Z',
-  },
-  {
-    id: 'sale-009',
-    sale_id: 'SL-2026-009',
-    date: '2026-04-10',
-    company_name: 'City Bank Limited',
-    contact_person_name: 'Tanvir Hasan',
-    contact_person_number: '+880 1819-876543',
-    products: [
-      {
-        id: 'p-16',
-        name: 'CCTV Security Camera Set (4-Cam NVR)',
-        unit_price: 32000,
-        quantity: 2,
-        subtotal: 64000,
-      },
-    ],
-    saas_package: 'Custom Enterprise Suite',
-    saas_package_price: 25000,
-    discount: 4000,
-    total_value: 85000,
-    sold_by: 'Taqi',
-    payment_status: 'Partial',
-    notes: 'Advance 50% received; balance upon branch rollout.',
-    created_at: '2026-04-10T14:15:00Z',
-    updated_at: '2026-04-10T14:15:00Z',
-  },
-  {
-    id: 'sale-010',
-    sale_id: 'SL-2026-010',
-    date: '2026-04-12',
-    company_name: 'Aarong / BRAC Enterprises',
-    contact_person_name: 'Nusrat Jahan',
-    contact_person_number: '+880 1730-998877',
-    products: [
-      {
-        id: 'p-17',
-        name: 'Thermal Receipt Printer (80mm USB/LAN)',
-        unit_price: 7200,
-        quantity: 5,
-        subtotal: 36000,
-      },
-      {
-        id: 'p-18',
-        name: 'Barcode Label Printer (Desktop)',
-        unit_price: 14500,
-        quantity: 2,
-        subtotal: 29000,
-      },
-    ],
-    saas_package: 'Standard (Up to 200 Users)',
-    saas_package_price: 7500,
-    discount: 2500,
-    total_value: 70000,
-    sold_by: 'Fariha',
-    payment_status: 'Paid',
-    notes: 'Warehouse & billing counter inventory printing equipment.',
-    created_at: '2026-04-12T17:00:00Z',
-    updated_at: '2026-04-12T17:00:00Z',
-  },
-];
+// Dummy sale IDs to purge from any local storage cache
+export const DUMMY_SALE_IDS = new Set([
+  'sale-001', 'sale-002', 'sale-003', 'sale-004', 'sale-005',
+  'sale-006', 'sale-007', 'sale-008', 'sale-009', 'sale-010',
+  'SL-2026-001', 'SL-2026-002', 'SL-2026-003', 'SL-2026-004', 'SL-2026-005',
+  'SL-2026-006', 'SL-2026-007', 'SL-2026-008', 'SL-2026-009', 'SL-2026-010',
+]);
+
+const INITIAL_SALES: SalesRecord[] = [];
 
 export const salesService = {
   // Flag to avoid duplicate background fetches on initial mount
@@ -475,12 +166,13 @@ export const salesService = {
       }
 
       if (data && data.length > 0) {
-        const records = data.map(mapDbRowToRecord);
+        const records = data
+          .map(mapDbRowToRecord)
+          .filter((r) => !DUMMY_SALE_IDS.has(r.id) && !DUMMY_SALE_IDS.has(r.sale_id));
         // Persist fresh data from Supabase to local storage
         this.saveSales(records);
         return records;
       } else if (data && data.length === 0) {
-        // Supabase table is empty; if we have local records, keep them
         return this.getSales();
       }
     } catch (err) {
@@ -583,38 +275,36 @@ export const salesService = {
               this.fetchSalesFromDb().catch(() => {});
             }
 
-            if (parsed.length >= 10) {
-              return parsed;
+            // Filter out any dummy sales
+            const cleaned = parsed.filter(
+              (p: any) => !DUMMY_SALE_IDS.has(p.id) && !DUMMY_SALE_IDS.has(p.sale_id)
+            );
+
+            // If dummy records were removed, update localStorage
+            if (cleaned.length !== parsed.length) {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned));
             }
-            // Merge missing initial sales if fewer than 10
-            const existingIds = new Set(parsed.map((p: any) => p.id || p.sale_id));
-            const combined = [...parsed];
-            for (const item of INITIAL_SALES) {
-              if (!existingIds.has(item.id) && !existingIds.has(item.sale_id)) {
-                combined.push(item);
-              }
-            }
-            this.saveSales(combined);
-            return combined;
+
+            return cleaned;
           }
         }
       }
     } catch (e) {
       console.error('Failed to load sales from storage', e);
     }
-    // Seed initial sales
-    this.saveSales(INITIAL_SALES);
+
     if (!this._hasAttemptedDbFetch && typeof window !== 'undefined') {
       this._hasAttemptedDbFetch = true;
       this.fetchSalesFromDb().catch(() => {});
     }
-    return INITIAL_SALES;
+    return [];
   },
 
   saveSales(sales: SalesRecord[]): void {
     try {
       if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(sales));
+        const filtered = sales.filter((s) => !DUMMY_SALE_IDS.has(s.id) && !DUMMY_SALE_IDS.has(s.sale_id));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
         window.dispatchEvent(new CustomEvent('sales-updated'));
       }
     } catch (e) {
