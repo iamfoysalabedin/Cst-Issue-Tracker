@@ -84,20 +84,20 @@ const MonthlyReports: React.FC = () => {
                 </h4>
                 <div className="grid grid-cols-2 gap-y-4">
                   <div>
-                    <p className="text-xs text-slate-500">Total Issues</p>
-                    <p className="text-xl font-bold dark:text-white">{e.total_issues}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Total Issues</p>
+                    <p className="text-xl font-bold text-slate-900 dark:text-white">{e.total_issues}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500">Bugs</p>
-                    <p className="text-xl font-bold dark:text-white">{e.system_bugs}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Bugs</p>
+                    <p className="text-xl font-bold text-slate-900 dark:text-white">{e.system_bugs}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500">Device</p>
-                    <p className="text-xl font-bold dark:text-white">{e.device_issues}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Device</p>
+                    <p className="text-xl font-bold text-slate-900 dark:text-white">{e.device_issues}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500">Help Req</p>
-                    <p className="text-xl font-bold dark:text-white">{e.help_requests}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Help Req</p>
+                    <p className="text-xl font-bold text-slate-900 dark:text-white">{e.help_requests}</p>
                   </div>
                 </div>
               </div>
@@ -125,12 +125,12 @@ const MonthlyReports: React.FC = () => {
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                   {entries.map((e, idx) => (
                     <tr key={e.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
-                      <td className="px-6 py-4 font-semibold text-sm dark:text-white">
+                      <td className="px-6 py-4 font-semibold text-sm text-slate-900 dark:text-white">
                         {new Date(e.month + '-01').toLocaleString('default', { month: 'long', year: 'numeric' })}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm dark:text-slate-300 font-medium">{e.total_issues}</span>
+                          <span className="text-sm text-slate-900 dark:text-slate-300 font-medium">{e.total_issues}</span>
                           {getComparison(idx, 'total_issues')}
                         </div>
                       </td>

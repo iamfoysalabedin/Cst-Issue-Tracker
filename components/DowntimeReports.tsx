@@ -120,20 +120,20 @@ const DowntimeReports: React.FC = () => {
       {/* Metrics Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <p className="text-xs font-bold text-slate-400 uppercase mb-1">Total Downtime</p>
+          <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Total Downtime</p>
           <div className="flex items-end gap-2">
-            <h3 className="text-3xl font-bold text-rose-600">{totalDowntime}</h3>
-            <span className="text-sm font-medium text-slate-500 mb-1">Minutes</span>
+            <h3 className="text-3xl font-bold text-rose-600 dark:text-rose-500">{totalDowntime}</h3>
+            <span className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Minutes</span>
           </div>
         </div>
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <p className="text-xs font-bold text-slate-400 uppercase mb-1">Total Incidents</p>
-          <h3 className="text-3xl font-bold dark:text-white">{filteredData.length}</h3>
+          <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Total Incidents</p>
+          <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{filteredData.length}</h3>
         </div>
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <p className="text-xs font-bold text-slate-400 uppercase mb-1">Average Duration</p>
-          <h3 className="text-3xl font-bold dark:text-white">
-            {filteredData.length > 0 ? (totalDowntime / filteredData.length).toFixed(1) : 0} <span className="text-sm font-medium text-slate-500">m</span>
+          <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Average Duration</p>
+          <h3 className="text-3xl font-bold text-slate-900 dark:text-white">
+            {filteredData.length > 0 ? (totalDowntime / filteredData.length).toFixed(1) : 0} <span className="text-sm font-medium text-slate-500 dark:text-slate-400">m</span>
           </h3>
         </div>
       </div>
@@ -145,10 +145,10 @@ const DowntimeReports: React.FC = () => {
           <select 
             value={systemFilter}
             onChange={(e) => setSystemFilter(e.target.value)}
-            className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm dark:text-white outline-none focus:ring-2 focus:ring-rose-500"
+            className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-rose-500"
           >
             <option value="All">All Systems</option>
-            {SYSTEMS.map(s => <option key={s} value={s}>{s}</option>)}
+            {SYSTEMS.map(s => <option key={s} value={s} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">{s}</option>)}
           </select>
         </div>
         <div className="flex items-center gap-2">
@@ -157,14 +157,14 @@ const DowntimeReports: React.FC = () => {
             type="date"
             value={fromDate}
             onChange={(e) => setFromDate(e.target.value)}
-            className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm dark:text-white"
+            className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white"
           />
-          <span className="text-slate-400">to</span>
+          <span className="text-slate-400 font-medium">to</span>
           <input 
             type="date"
             value={toDate}
             onChange={(e) => setToDate(e.target.value)}
-            className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm dark:text-white"
+            className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white"
           />
         </div>
         <button
@@ -194,7 +194,7 @@ const DowntimeReports: React.FC = () => {
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
               {filteredData.length > 0 ? filteredData.map(d => (
                 <tr key={d.id} className="hover:bg-rose-50/10 dark:hover:bg-rose-900/5 transition-colors">
-                  <td className="px-6 py-4 text-sm font-semibold dark:text-white">{new Date(d.date).toLocaleDateString(undefined, { dateStyle: 'medium' })}</td>
+                  <td className="px-6 py-4 text-sm font-semibold text-slate-900 dark:text-white">{new Date(d.date).toLocaleDateString(undefined, { dateStyle: 'medium' })}</td>
                   <td className="px-6 py-4">
                     <span className="text-xs px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-md font-bold">
                       {d.system_name}

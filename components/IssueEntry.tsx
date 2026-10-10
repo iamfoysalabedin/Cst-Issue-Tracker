@@ -402,7 +402,7 @@ const IssueEntry: React.FC = () => {
                   onKeyDown={handleClientKeyDown}
                   placeholder="e.g. Acme Corp"
                   autoComplete="off"
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white text-xs"
                 />
 
                 {/* Suggestions Dropdown */}
@@ -468,13 +468,13 @@ const IssueEntry: React.FC = () => {
               <select 
                 value={formData.issue_type}
                 onChange={(e) => setFormData({...formData, issue_type: e.target.value})}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white text-xs"
               >
-                <option value="">Select Type</option>
-                <option value="System Bugs">System Bugs</option>
-                <option value="Device Issues">Device Issues</option>
-                <option value="Awareness">Awareness</option>
-                <option value="Help Requests">Help Requests</option>
+                <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Select Type</option>
+                <option value="System Bugs" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">System Bugs</option>
+                <option value="Device Issues" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Device Issues</option>
+                <option value="Awareness" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Awareness</option>
+                <option value="Help Requests" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Help Requests</option>
               </select>
             </div>
 
@@ -483,10 +483,10 @@ const IssueEntry: React.FC = () => {
               <select 
                 value={formData.category}
                 onChange={(e) => setFormData({...formData, category: e.target.value})}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white text-xs"
               >
-                <option value="">Select Category</option>
-                {options.categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Select Category</option>
+                {options.categories.map(c => <option key={c.id} value={c.name} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{c.name}</option>)}
               </select>
             </div>
 
@@ -495,10 +495,10 @@ const IssueEntry: React.FC = () => {
               <select 
                 value={formData.segment}
                 onChange={(e) => setFormData({...formData, segment: e.target.value})}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white text-xs"
               >
-                <option value="">Select Segment</option>
-                {options.segments.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
+                <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Select Segment</option>
+                {options.segments.map(s => <option key={s.id} value={s.name} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{s.name}</option>)}
               </select>
             </div>
 
@@ -509,7 +509,7 @@ const IssueEntry: React.FC = () => {
                 value={formData.clickup_ticket_id}
                 onChange={(e) => setFormData({...formData, clickup_ticket_id: e.target.value})}
                 placeholder="e.g. #8678xyz"
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white text-xs"
               />
             </div>
 
@@ -518,9 +518,9 @@ const IssueEntry: React.FC = () => {
               <select 
                 value={formData.priority}
                 onChange={(e) => setFormData({...formData, priority: e.target.value})}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white text-xs"
               >
-                {options.priorities.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+                {options.priorities.map(p => <option key={p.id} value={p.name} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{p.name}</option>)}
               </select>
             </div>
 
@@ -592,9 +592,9 @@ const IssueEntry: React.FC = () => {
               <select 
                 value={formData.assigned_person}
                 onChange={(e) => setFormData({...formData, assigned_person: e.target.value})}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white text-xs"
               >
-                {options.assignedPersons.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+                {options.assignedPersons.map(p => <option key={p.id} value={p.name} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{p.name}</option>)}
               </select>
             </div>
 
@@ -603,9 +603,9 @@ const IssueEntry: React.FC = () => {
               <select 
                 value={formData.status}
                 onChange={(e) => setFormData({...formData, status: e.target.value})}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white text-xs"
               >
-                {options.statuses.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
+                {options.statuses.map(s => <option key={s.id} value={s.name} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{s.name}</option>)}
               </select>
             </div>
 
@@ -624,7 +624,7 @@ const IssueEntry: React.FC = () => {
                 type="time"
                 value={convert12hTo24h(formData.client_reporting_time)}
                 onChange={(e) => setFormData({...formData, client_reporting_time: convert24hTo12h(e.target.value)})}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white text-xs"
               />
             </div>
 
@@ -643,7 +643,7 @@ const IssueEntry: React.FC = () => {
                 type="time"
                 value={convert12hTo24h(formData.response_time)}
                 onChange={(e) => setFormData({...formData, response_time: convert24hTo12h(e.target.value)})}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white text-xs"
               />
             </div>
 
@@ -662,7 +662,7 @@ const IssueEntry: React.FC = () => {
                 type="time"
                 value={convert12hTo24h(formData.resolution_time)}
                 onChange={(e) => setFormData({...formData, resolution_time: convert24hTo12h(e.target.value)})}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white text-xs"
               />
             </div>
           </div>
@@ -674,7 +674,7 @@ const IssueEntry: React.FC = () => {
               value={formData.issue_details}
               onChange={(e) => setFormData({...formData, issue_details: e.target.value})}
               placeholder="Provide a thorough description of the issue..."
-              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white resize-none text-xs"
+              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white resize-none text-xs"
             />
           </div>
 

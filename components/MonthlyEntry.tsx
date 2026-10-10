@@ -37,14 +37,14 @@ const MonthlyEntry: React.FC = () => {
   return (
     <div className="max-w-xl mx-auto animate-in slide-in-from-bottom-4 duration-500">
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
-        <div className="bg-slate-900 p-8 text-white border-b border-slate-800">
-          <h2 className="text-2xl font-bold">Monthly Aggregate Entry</h2>
-          <p className="opacity-60 text-sm mt-1">Record summarized metrics for official monthly reporting.</p>
+        <div className="p-8 bg-gradient-to-r from-indigo-50/80 to-purple-50/80 dark:from-slate-800/80 dark:to-slate-900 border-b border-slate-200 dark:border-slate-800">
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Monthly Aggregate Entry</h2>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Record summarized metrics for official monthly reporting.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="p-8 space-y-6">
-          {error && <div className="p-4 bg-rose-50 text-rose-600 rounded-xl border border-rose-100 text-sm">{error}</div>}
-          {success && <div className="p-4 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100 text-sm">Monthly data saved!</div>}
+          {error && <div className="p-4 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 rounded-xl border border-rose-200 dark:border-rose-900/60 text-sm">{error}</div>}
+          {success && <div className="p-4 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-xl border border-emerald-200 dark:border-emerald-900/60 text-sm">Monthly data saved!</div>}
 
           <div className="space-y-4">
             <div className="space-y-2">
@@ -53,7 +53,7 @@ const MonthlyEntry: React.FC = () => {
                 type="month"
                 value={formData.month}
                 onChange={(e) => setFormData({...formData, month: e.target.value})}
-                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl dark:text-white"
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-hidden text-sm"
               />
             </div>
 
@@ -69,10 +69,9 @@ const MonthlyEntry: React.FC = () => {
                   <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">{field.label}</label>
                   <input 
                     type="number"
-                    // Fix: Corrected the typo 'key4' to 'keyof typeof formData' for proper type-safe indexing
                     value={formData[field.key as keyof typeof formData]}
                     onChange={(e) => setFormData({...formData, [field.key]: parseInt(e.target.value) || 0})}
-                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl dark:text-white"
+                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-hidden text-sm"
                   />
                 </div>
               ))}
@@ -81,7 +80,7 @@ const MonthlyEntry: React.FC = () => {
 
           <button 
             type="submit"
-            className="w-full py-4 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-bold rounded-xl shadow-lg hover:opacity-90 transition-opacity"
+            className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/20 transition-all cursor-pointer"
           >
             Save Monthly Summary
           </button>

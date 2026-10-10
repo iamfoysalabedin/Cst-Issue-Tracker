@@ -487,11 +487,11 @@ const Settings: React.FC = () => {
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
                     placeholder={`Add new ${CATEGORIES.find(c => c.id === activeCategory)?.label.toLowerCase()}...`}
-                    className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white"
+                    className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white"
                   />
                   <button
                     type="submit"
-                    className="px-6 py-2.5 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                    className="px-6 py-2.5 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:bg-indigo-700 transition-colors flex items-center gap-2 cursor-pointer"
                   >
                     <Plus size={18} />
                     Add
@@ -506,17 +506,17 @@ const Settings: React.FC = () => {
                         <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                    <tbody className="divide-y divide-slate-200 dark:border-slate-800">
                       {currentCategorySettings.length > 0 ? (
                         currentCategorySettings.map(item => (
                           <tr key={item.id} className="hover:bg-white dark:hover:bg-slate-800/50 transition-colors">
-                            <td className="px-6 py-4 text-sm font-medium dark:text-white">
+                            <td className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-white">
                               {editingId === item.id ? (
                                 <input
                                   type="text"
                                   value={editingName}
                                   onChange={(e) => setEditingName(e.target.value)}
-                                  className="w-full px-3 py-1 bg-white dark:bg-slate-700 border border-indigo-500 rounded-lg outline-none"
+                                  className="w-full px-3 py-1 bg-white dark:bg-slate-700 border border-indigo-500 rounded-lg outline-none text-slate-900 dark:text-white"
                                   autoFocus
                                   onKeyDown={(e) => {
                                     if (e.key === 'Enter') handleUpdate(item.id);

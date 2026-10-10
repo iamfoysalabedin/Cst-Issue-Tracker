@@ -55,8 +55,8 @@ const DowntimeEntry: React.FC = () => {
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
         <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold dark:text-white">Log Downtime</h2>
-            <p className="text-slate-500 text-sm mt-1">Record service interruptions for analysis.</p>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Log Downtime</h2>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Record service interruptions for analysis.</p>
           </div>
           <div className="w-12 h-12 bg-rose-50 dark:bg-rose-900/20 text-rose-600 rounded-2xl flex items-center justify-center">
             <Activity size={24} />
@@ -64,7 +64,7 @@ const DowntimeEntry: React.FC = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="p-8 space-y-6">
-          {success && <div className="p-4 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100 text-sm">Downtime entry recorded!</div>}
+          {success && <div className="p-4 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-xl border border-emerald-200 dark:border-emerald-900/60 text-sm">Downtime entry recorded!</div>}
 
           <div className="space-y-4">
             <div className="space-y-2">
@@ -73,7 +73,7 @@ const DowntimeEntry: React.FC = () => {
                 type="date"
                 value={formData.date}
                 onChange={(e) => setFormData({...formData, date: e.target.value})}
-                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl dark:text-white"
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:outline-hidden text-sm"
               />
             </div>
 
@@ -82,9 +82,9 @@ const DowntimeEntry: React.FC = () => {
               <select 
                 value={formData.system_name}
                 onChange={(e) => setFormData({...formData, system_name: e.target.value})}
-                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl dark:text-white"
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:outline-hidden text-sm"
               >
-                {systemOptions.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
+                {systemOptions.map(s => <option key={s.id} value={s.name} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">{s.name}</option>)}
               </select>
             </div>
 
@@ -95,7 +95,7 @@ const DowntimeEntry: React.FC = () => {
                   type="time"
                   value={formData.start_time}
                   onChange={(e) => setFormData({...formData, start_time: e.target.value})}
-                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl dark:text-white"
+                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:outline-hidden text-sm"
                 />
               </div>
               <div className="space-y-2">
@@ -104,7 +104,7 @@ const DowntimeEntry: React.FC = () => {
                   type="time"
                   value={formData.end_time}
                   onChange={(e) => setFormData({...formData, end_time: e.target.value})}
-                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl dark:text-white"
+                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:outline-hidden text-sm"
                 />
               </div>
             </div>

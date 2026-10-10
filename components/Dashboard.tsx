@@ -132,11 +132,11 @@ const Dashboard: React.FC = () => {
             <select 
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
-              className="bg-transparent text-xs font-semibold outline-none cursor-pointer text-indigo-600"
+              className="bg-transparent text-xs font-semibold outline-none cursor-pointer text-indigo-600 dark:text-indigo-400"
             >
               {Array.from({ length: 5 }, (_, i) => {
                 const year = new Date().getFullYear() - i;
-                return <option key={year} value={year}>{year}</option>;
+                return <option key={year} value={year} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{year}</option>;
               })}
             </select>
           </div>
@@ -145,13 +145,13 @@ const Dashboard: React.FC = () => {
             <select 
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="bg-transparent text-xs font-semibold outline-none pr-2 cursor-pointer text-indigo-600"
+              className="bg-transparent text-xs font-semibold outline-none pr-2 cursor-pointer text-indigo-600 dark:text-indigo-400"
             >
-              <option value="">All Months</option>
+              <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">All Months</option>
               {Array.from({ length: 12 }, (_, i) => {
                 const monthNum = String(i + 1).padStart(2, '0');
                 const monthName = new Date(2000, i).toLocaleString('default', { month: 'long' });
-                return <option key={monthNum} value={monthNum}>{monthName}</option>;
+                return <option key={monthNum} value={monthNum} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{monthName}</option>;
               })}
             </select>
           </div>

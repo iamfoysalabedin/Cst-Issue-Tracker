@@ -447,11 +447,11 @@ const Analytics: React.FC = () => {
             <select 
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
-              className="bg-transparent text-sm font-bold outline-none cursor-pointer text-indigo-600"
+              className="bg-transparent text-sm font-bold outline-none cursor-pointer text-indigo-600 dark:text-indigo-400"
             >
               {Array.from({ length: 5 }, (_, i) => {
                 const year = new Date().getFullYear() - i;
-                return <option key={year} value={year}>{year}</option>;
+                return <option key={year} value={year} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{year}</option>;
               })}
             </select>
           </div>
@@ -459,10 +459,10 @@ const Analytics: React.FC = () => {
             <select 
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="bg-transparent text-sm font-bold outline-none pr-2 cursor-pointer text-indigo-600"
+              className="bg-transparent text-sm font-bold outline-none pr-2 cursor-pointer text-indigo-600 dark:text-indigo-400"
             >
               {months.map((m, i) => (
-                <option key={m} value={String(i + 1).padStart(2, '0')}>{m}</option>
+                <option key={m} value={String(i + 1).padStart(2, '0')} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{m}</option>
               ))}
             </select>
           </div>
@@ -731,7 +731,7 @@ const Analytics: React.FC = () => {
                         <td className="px-5 py-4 text-center whitespace-nowrap">
                           <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${
                             data.avgResponseLag !== null 
-                              ? 'bg-amber-50 dark:bg-amber-900/10 text-amber-605 dark:text-amber-400'
+                              ? 'bg-amber-50 dark:bg-amber-900/10 text-amber-600 dark:text-amber-400'
                               : 'text-slate-400'
                           }`}>
                             {formatDuration(data.avgResponseLag)}
@@ -758,7 +758,7 @@ const Analytics: React.FC = () => {
                         <td className="px-5 py-4 text-center whitespace-nowrap">
                           <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
                             data.totalSupportTime > 0
-                              ? 'bg-violet-50 dark:bg-violet-900/15 text-violet-605 dark:text-violet-400'
+                              ? 'bg-violet-50 dark:bg-violet-900/15 text-violet-600 dark:text-violet-400'
                               : 'text-slate-400'
                           }`}>
                             {formatDuration(data.totalSupportTime)}
