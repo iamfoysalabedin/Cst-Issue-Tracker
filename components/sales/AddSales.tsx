@@ -62,8 +62,6 @@ export const AddSales: React.FC = () => {
   const [notes, setNotes] = useState('');
 
   // UI state
-  const [companySuggestions, setCompanySuggestions] = useState<string[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSqlModal, setShowSqlModal] = useState(false);
@@ -77,9 +75,8 @@ export const AddSales: React.FC = () => {
     amount?: number;
   } | null>(null);
 
-  // Load assigned persons from settings and client names from issues/db
+  // Load assigned persons from settings
   useEffect(() => {
-    // 1. Fetch assigned persons configured in Settings
     dbService.getSettingsByCategory('assigned_person').then((items) => {
       const names = items.map((i) => i.name).filter(Boolean);
       if (names.length > 0) {
@@ -95,12 +92,6 @@ export const AddSales: React.FC = () => {
       setAssignedPersons(fallback);
       setSoldBy((prev) => prev || fallback[0]);
     });
-
-    // 2. Client autocomplete suggestions
-    dbService.getIssues().then((issues) => {
-      const names = Array.from(new Set(issues.map((i) => i.client_name).filter(Boolean)));
-      setCompanySuggestions(names as string[]);
-    }).catch(() => {});
   }, []);
 
   // Product Row Handlers
@@ -255,10 +246,6 @@ export const AddSales: React.FC = () => {
     setSuccessNotice(null);
   };
 
-  const filteredCompanySuggestions = companySuggestions.filter((c) =>
-    companyName.trim() && c.toLowerCase().includes(companyName.toLowerCase().trim())
-  );
-
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-12 animate-in fade-in duration-300">
       <div className="flex items-center justify-between gap-4">
@@ -385,43 +372,20 @@ export const AddSales: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Company Name with Suggestions */}
-                <div className="relative">
+                {/* Company Name */}
+                <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                     Company Name *
                   </label>
                   <input
                     type="text"
                     value={companyName}
-                    onChange={(e) => {
-                      setCompanyName(e.target.value);
-                      setShowSuggestions(true);
-                    }}
-                    onFocus={() => setShowSuggestions(true)}
-                    placeholder="e.g. Apex Footwear Ltd."
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    placeholder="Enter company name"
+                    autoComplete="off"
                     className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden text-slate-900 dark:text-white font-medium"
                     required
                   />
-
-                  {/* Company Suggestions dropdown */}
-                  {showSuggestions && filteredCompanySuggestions.length > 0 && (
-                    <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-20 max-h-40 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
-                      {filteredCompanySuggestions.map((name) => (
-                        <button
-                          key={name}
-                          type="button"
-                          onClick={() => {
-                            setCompanyName(name);
-                            setShowSuggestions(false);
-                          }}
-                          className="w-full text-left px-3 py-2 text-xs text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-between"
-                        >
-                          <span>{name}</span>
-                          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">Select</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
                 </div>
 
                 {/* Contact Person Name */}

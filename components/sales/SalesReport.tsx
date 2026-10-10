@@ -439,7 +439,7 @@ export const SalesReport: React.FC = () => {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="bg-slate-50 dark:bg-slate-800/70 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
-                <th className="py-3 px-4">Sale ID & Date</th>
+                <th className="py-3 px-4">Date</th>
                 <th className="py-3 px-4">Company Name</th>
                 <th className="py-3 px-3">Contact Person & Phone</th>
                 <th className="py-3 px-4">Products (Items & Qty)</th>
@@ -463,13 +463,11 @@ export const SalesReport: React.FC = () => {
                     key={sale.id}
                     className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors group"
                   >
-                    {/* Sale ID & Date */}
-                    <td className="py-3.5 px-4">
-                      <span className="font-bold text-slate-900 dark:text-white font-mono block">
-                        {sale.sale_id}
-                      </span>
-                      <span className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5">
-                        <Calendar size={11} /> {sale.date}
+                    {/* Date */}
+                    <td className="py-3.5 px-4 font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">
+                      <span className="flex items-center gap-1.5 text-xs">
+                        <Calendar size={13} className="text-slate-400" />
+                        <span>{sale.date}</span>
                       </span>
                     </td>
 
