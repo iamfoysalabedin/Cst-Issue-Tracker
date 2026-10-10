@@ -1,7 +1,109 @@
-import { SalesRecord, SalesProductItem, SalesMetrics } from '../types/sales';
+import { SalesRecord, SalesProductItem, SalesMetrics, PaymentStatus } from '../types/sales';
 import * as XLSX from 'xlsx';
+import { supabase } from '../lib/supabase';
 
 const STORAGE_KEY = 'app_sales_records_v1';
+
+export const SALES_TABLE_SQL = `-- 1. Create the sales table in Supabase
+CREATE TABLE IF NOT EXISTS public.sales (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    sale_id TEXT NOT NULL,
+    date DATE NOT NULL DEFAULT CURRENT_DATE,
+    company_name TEXT NOT NULL,
+    contact_person_name TEXT NOT NULL,
+    contact_person_number TEXT NOT NULL,
+    products JSONB NOT NULL DEFAULT '[]'::jsonb,
+    saas_package TEXT DEFAULT 'None (Hardware Only)',
+    saas_package_price NUMERIC(12, 2) DEFAULT 0,
+    discount NUMERIC(12, 2) DEFAULT 0,
+    total_value NUMERIC(12, 2) DEFAULT 0,
+    sold_by TEXT NOT NULL,
+    payment_status TEXT NOT NULL DEFAULT 'Paid',
+    notes TEXT DEFAULT '',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 2. Enable Row Level Security (RLS)
+ALTER TABLE public.sales ENABLE ROW LEVEL SECURITY;
+
+-- 3. Create RLS Policies to allow read, insert, update, delete for public anon & authenticated users
+CREATE POLICY "Allow anon and auth read on sales" 
+    ON public.sales FOR SELECT 
+    TO anon, authenticated 
+    USING (true);
+
+CREATE POLICY "Allow anon and auth insert on sales" 
+    ON public.sales FOR INSERT 
+    TO anon, authenticated 
+    WITH CHECK (true);
+
+CREATE POLICY "Allow anon and auth update on sales" 
+    ON public.sales FOR UPDATE 
+    TO anon, authenticated 
+    USING (true);
+
+CREATE POLICY "Allow anon and auth delete on sales" 
+    ON public.sales FOR DELETE 
+    TO anon, authenticated 
+    USING (true);
+
+-- 4. Create Indexes for faster searches and metrics
+CREATE INDEX IF NOT EXISTS idx_sales_date ON public.sales (date DESC);
+CREATE INDEX IF NOT EXISTS idx_sales_sale_id ON public.sales (sale_id);
+CREATE INDEX IF NOT EXISTS idx_sales_company ON public.sales (company_name);
+CREATE INDEX IF NOT EXISTS idx_sales_sold_by ON public.sales (sold_by);
+CREATE INDEX IF NOT EXISTS idx_sales_payment_status ON public.sales (payment_status);`;
+
+function mapRecordToDbRow(record: SalesRecord) {
+  return {
+    id: record.id,
+    sale_id: record.sale_id,
+    date: record.date || new Date().toISOString().split('T')[0],
+    company_name: record.company_name,
+    contact_person_name: record.contact_person_name,
+    contact_person_number: record.contact_person_number,
+    products: record.products || [],
+    saas_package: record.saas_package || 'None (Hardware Only)',
+    saas_package_price: Number(record.saas_package_price) || 0,
+    discount: Number(record.discount) || 0,
+    total_value: Number(record.total_value) || 0,
+    sold_by: record.sold_by,
+    payment_status: record.payment_status || 'Paid',
+    notes: record.notes || '',
+    created_at: record.created_at || new Date().toISOString(),
+    updated_at: record.updated_at || new Date().toISOString(),
+  };
+}
+
+function mapDbRowToRecord(row: any): SalesRecord {
+  return {
+    id: String(row.id),
+    sale_id: row.sale_id || `SL-${row.id}`,
+    date: row.date ? String(row.date).split('T')[0] : new Date().toISOString().split('T')[0],
+    company_name: row.company_name || '',
+    contact_person_name: row.contact_person_name || '',
+    contact_person_number: row.contact_person_number || '',
+    products: Array.isArray(row.products)
+      ? row.products.map((p: any) => ({
+          id: p.id || `p-${Date.now()}`,
+          name: p.name || '',
+          unit_price: Number(p.unit_price) || 0,
+          quantity: Number(p.quantity) || 1,
+          subtotal: Number(p.subtotal) || (Number(p.unit_price) || 0) * (Number(p.quantity) || 1),
+        }))
+      : (typeof row.products === 'string' ? JSON.parse(row.products || '[]') : []),
+    saas_package: row.saas_package || 'None (Hardware Only)',
+    saas_package_price: Number(row.saas_package_price) || 0,
+    discount: Number(row.discount) || 0,
+    total_value: Number(row.total_value) || 0,
+    sold_by: row.sold_by || '',
+    payment_status: (row.payment_status as PaymentStatus) || 'Paid',
+    notes: row.notes || '',
+    created_at: row.created_at || new Date().toISOString(),
+    updated_at: row.updated_at || new Date().toISOString(),
+  };
+}
 
 export const POPULAR_PRODUCTS = [
   { name: 'Biometric Attendance Device (IN-Bio 400)', defaultPrice: 16500 },
@@ -352,25 +454,149 @@ const INITIAL_SALES: SalesRecord[] = [
 ];
 
 export const salesService = {
+  // Flag to avoid duplicate background fetches on initial mount
+  _hasAttemptedDbFetch: false,
+
+  async fetchSalesFromDb(): Promise<SalesRecord[]> {
+    try {
+      const { data, error } = await supabase
+        .from('sales')
+        .select('*')
+        .order('date', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        if (error.code === 'PGRST205') {
+          console.warn("Supabase 'sales' table does not exist yet in schema cache. Please run SQL schema in Supabase SQL Editor.");
+        } else {
+          console.error('Error fetching sales from Supabase:', error);
+        }
+        return this.getSales();
+      }
+
+      if (data && data.length > 0) {
+        const records = data.map(mapDbRowToRecord);
+        // Persist fresh data from Supabase to local storage
+        this.saveSales(records);
+        return records;
+      } else if (data && data.length === 0) {
+        // Supabase table is empty; if we have local records, keep them
+        return this.getSales();
+      }
+    } catch (err) {
+      console.error('Failed to fetch sales from Supabase:', err);
+    }
+    return this.getSales();
+  },
+
+  async saveToSupabase(record: SalesRecord): Promise<{ success: boolean; error?: string; isTableMissing?: boolean }> {
+    try {
+      const payload = mapRecordToDbRow(record);
+      const { error } = await supabase
+        .from('sales')
+        .insert([payload]);
+
+      if (error) {
+        console.warn('Supabase sales insert response:', error);
+        return {
+          success: false,
+          error: error.message,
+          isTableMissing: error.code === 'PGRST205',
+        };
+      }
+
+      return { success: true };
+    } catch (err: any) {
+      console.error('Supabase sales save exception:', err);
+      return {
+        success: false,
+        error: err?.message || 'Unexpected network or database error',
+      };
+    }
+  },
+
+  async updateInSupabase(record: SalesRecord): Promise<void> {
+    try {
+      const payload = mapRecordToDbRow(record);
+      const { error } = await supabase
+        .from('sales')
+        .update(payload)
+        .eq('id', record.id);
+
+      if (error && error.code !== 'PGRST205') {
+        console.error('Error updating sale in Supabase:', error);
+      }
+    } catch (err) {
+      console.error('Exception updating sale in Supabase:', err);
+    }
+  },
+
+  async deleteFromSupabase(id: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('sales')
+        .delete()
+        .or(`id.eq.${id},sale_id.eq.${id}`);
+
+      if (error && error.code !== 'PGRST205') {
+        console.error('Error deleting sale from Supabase:', error);
+      }
+    } catch (err) {
+      console.error('Exception deleting sale from Supabase:', err);
+    }
+  },
+
+  async syncLocalToSupabase(): Promise<{ synced: number; error?: string; isTableMissing?: boolean }> {
+    try {
+      const current = this.getSales();
+      if (current.length === 0) return { synced: 0 };
+
+      const payloads = current.map(mapRecordToDbRow);
+      const { error } = await supabase
+        .from('sales')
+        .upsert(payloads, { onConflict: 'id' });
+
+      if (error) {
+        return {
+          synced: 0,
+          error: error.message,
+          isTableMissing: error.code === 'PGRST205',
+        };
+      }
+
+      return { synced: current.length };
+    } catch (err: any) {
+      return { synced: 0, error: err?.message };
+    }
+  },
+
   getSales(): SalesRecord[] {
     try {
-      const data = localStorage.getItem(STORAGE_KEY);
-      if (data) {
-        const parsed = JSON.parse(data);
-        if (Array.isArray(parsed)) {
-          if (parsed.length >= 10) {
-            return parsed;
-          }
-          // Merge missing initial sales if fewer than 10
-          const existingIds = new Set(parsed.map((p: any) => p.id || p.sale_id));
-          const combined = [...parsed];
-          for (const item of INITIAL_SALES) {
-            if (!existingIds.has(item.id) && !existingIds.has(item.sale_id)) {
-              combined.push(item);
+      if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+        const data = localStorage.getItem(STORAGE_KEY);
+        if (data) {
+          const parsed = JSON.parse(data);
+          if (Array.isArray(parsed)) {
+            // Trigger one background fetch from Supabase on first call in session
+            if (!this._hasAttemptedDbFetch) {
+              this._hasAttemptedDbFetch = true;
+              this.fetchSalesFromDb().catch(() => {});
             }
+
+            if (parsed.length >= 10) {
+              return parsed;
+            }
+            // Merge missing initial sales if fewer than 10
+            const existingIds = new Set(parsed.map((p: any) => p.id || p.sale_id));
+            const combined = [...parsed];
+            for (const item of INITIAL_SALES) {
+              if (!existingIds.has(item.id) && !existingIds.has(item.sale_id)) {
+                combined.push(item);
+              }
+            }
+            this.saveSales(combined);
+            return combined;
           }
-          this.saveSales(combined);
-          return combined;
         }
       }
     } catch (e) {
@@ -378,13 +604,19 @@ export const salesService = {
     }
     // Seed initial sales
     this.saveSales(INITIAL_SALES);
+    if (!this._hasAttemptedDbFetch && typeof window !== 'undefined') {
+      this._hasAttemptedDbFetch = true;
+      this.fetchSalesFromDb().catch(() => {});
+    }
     return INITIAL_SALES;
   },
 
   saveSales(sales: SalesRecord[]): void {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(sales));
-      window.dispatchEvent(new CustomEvent('sales-updated'));
+      if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(sales));
+        window.dispatchEvent(new CustomEvent('sales-updated'));
+      }
     } catch (e) {
       console.error('Failed to save sales to storage', e);
     }
@@ -452,7 +684,37 @@ export const salesService = {
 
     const updatedList = [newRecord, ...current];
     this.saveSales(updatedList);
+
+    // Save to Supabase asynchronously in background
+    this.saveToSupabase(newRecord).catch((err) => {
+      console.warn('Background Supabase save encountered:', err);
+    });
+
     return newRecord;
+  },
+
+  async addSaleAsync(saleData: {
+    date: string;
+    company_name: string;
+    contact_person_name: string;
+    contact_person_number: string;
+    products: SalesProductItem[];
+    saas_package: string;
+    saas_package_price?: number;
+    discount?: number;
+    total_value?: number;
+    sold_by: string;
+    payment_status: 'Paid' | 'Partial' | 'Pending' | 'Due';
+    notes?: string;
+  }): Promise<{ record: SalesRecord; supabaseSaved: boolean; error?: string; isTableMissing?: boolean }> {
+    const record = this.addSale(saleData);
+    const res = await this.saveToSupabase(record);
+    return {
+      record,
+      supabaseSaved: res.success,
+      error: res.error,
+      isTableMissing: res.isTableMissing,
+    };
   },
 
   updateSale(id: string, updated: Partial<SalesRecord>): SalesRecord | null {
@@ -492,14 +754,20 @@ export const salesService = {
 
     current[index] = merged;
     this.saveSales(current);
+
+    // Update in Supabase
+    this.updateInSupabase(merged);
+
     return merged;
   },
 
   deleteSale(id: string): boolean {
     const current = this.getSales();
-    const filtered = current.filter((s) => s.id !== id);
+    const filtered = current.filter((s) => s.id !== id && s.sale_id !== id);
     if (filtered.length !== current.length) {
       this.saveSales(filtered);
+      // Delete in Supabase
+      this.deleteFromSupabase(id);
       return true;
     }
     return false;

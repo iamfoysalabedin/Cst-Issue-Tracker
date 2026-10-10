@@ -66,6 +66,11 @@ export const SalesDashboard: React.FC = () => {
     }).catch(() => {
       setAssignedPersons(['Fuad', 'Rahat', 'Foysal', 'Taqi', 'Fariha']);
     });
+
+    // Fetch latest sales from Supabase
+    salesService.fetchSalesFromDb().then(() => {
+      loadData();
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {

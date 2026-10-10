@@ -59,6 +59,11 @@ export const SalesReport: React.FC = () => {
 
   useEffect(() => {
     loadData();
+    // Fetch latest data from Supabase
+    salesService.fetchSalesFromDb().then(() => {
+      loadData();
+    }).catch(() => {});
+
     dbService.getSettingsByCategory('assigned_person').then((items) => {
       const names = items.map((i) => i.name).filter(Boolean);
       if (names.length > 0) {
