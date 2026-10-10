@@ -64,19 +64,19 @@ export const AdminPanelPage: React.FC = () => {
   const handleToggle = (id: keyof ModuleConfig, label: string) => {
     const updated = adminAuthService.toggleModule(id);
     setConfig(updated);
-    showToast(`${label} is now ${updated[id] ? 'VISIBLE' : 'HIDDEN'} in the sidebar.`);
+    showToast(`${label} is now ${updated[id] ? 'ON (Active)' : 'OFF (Hidden & URL Access Blocked)'} across all browsers.`);
   };
 
   const handleSetAll = (state: boolean) => {
     const updated = adminAuthService.setAllModules(state);
     setConfig(updated);
-    showToast(state ? 'All modules turned ON in sidebar.' : 'All modules turned OFF in sidebar.');
+    showToast(state ? 'All modules turned ON globally.' : 'All modules turned OFF globally (URL access blocked).');
   };
 
   const handleReset = () => {
     adminAuthService.saveModuleConfig(DEFAULT_MODULE_CONFIG);
     setConfig(DEFAULT_MODULE_CONFIG);
-    showToast('Reset all modules to default (Visible).');
+    showToast('Reset all modules to default (Visible & Active).');
   };
 
   const handleLogout = () => {
@@ -144,9 +144,12 @@ export const AdminPanelPage: React.FC = () => {
               <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 flex items-center gap-1">
                 <ShieldCheck size={13} /> Logged In
               </span>
+              <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                🌐 Synced Across All Browsers
+              </span>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Toggle sidebar modules ON or OFF to control navigation visibility
+              মডিউল অন/অফ করুন: কোনো মডিউল অফ করলে সব ব্রাউজারে সাইডবার থেকে হাইড হবে এবং সরাসরি URL এক্সেসও ব্লক থাকবে।
             </p>
           </div>
         </div>

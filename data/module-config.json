@@ -1,0 +1,16 @@
+{
+  "Dashboard": true,
+  "Sales": true,
+  "Retention": true,
+  "IssueEntry": true,
+  "IssueReports": true,
+  "Analytics": true,
+  "WeeklyReport": true,
+  "MonthlyEntry": true,
+  "MonthlyReports": true,
+  "DowntimeEntry": true,
+  "DowntimeReports": true,
+  "NoticeGenerator": true,
+  "SimFinder": true,
+  "Settings": true
+}

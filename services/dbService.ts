@@ -108,6 +108,7 @@ export const dbService = {
     const { data, error } = await supabase
       .from('settings')
       .select('*')
+      .neq('category', 'module_config')
       .order('created_at', { ascending: true });
     
     if (error) {

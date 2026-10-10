@@ -26,6 +26,7 @@ import { AddSales } from './components/sales/AddSales';
 import { SalesReport } from './components/sales/SalesReport';
 import { AdminLoginPage } from './components/admin/AdminLoginPage';
 import { AdminPanelPage } from './components/admin/AdminPanelPage';
+import { ModuleRouteGuard } from './components/common/ModuleRouteGuard';
 
 const App: React.FC = () => {
   return (
@@ -33,34 +34,202 @@ const App: React.FC = () => {
       <Layout>
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/issue-entry" element={<IssueEntry />} />
-          <Route path="/issue-reports" element={<IssueReports />} />
-          <Route path="/monthly-entry" element={<MonthlyEntry />} />
-          <Route path="/monthly-reports" element={<MonthlyReports />} />
-          <Route path="/downtime-entry" element={<DowntimeEntry />} />
-          <Route path="/downtime-reports" element={<DowntimeReports />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/notice-generator" element={<NoticeGenerator />} />
-          <Route path="/sim-finder" element={<SimFinder />} />
-          <Route path="/analytics" element={<Analytics />} />
-          <Route path="/weekly-report" element={<WeeklyReport />} />
+          <Route 
+            path="/dashboard" 
+            element={
+              <ModuleRouteGuard moduleId="Dashboard" moduleName="Dashboard">
+                <Dashboard />
+              </ModuleRouteGuard>
+            } 
+          />
+          <Route 
+            path="/issue-entry" 
+            element={
+              <ModuleRouteGuard moduleId="IssueEntry" moduleName="Issue Entry">
+                <IssueEntry />
+              </ModuleRouteGuard>
+            } 
+          />
+          <Route 
+            path="/issue-reports" 
+            element={
+              <ModuleRouteGuard moduleId="IssueReports" moduleName="Issue Reports">
+                <IssueReports />
+              </ModuleRouteGuard>
+            } 
+          />
+          <Route 
+            path="/monthly-entry" 
+            element={
+              <ModuleRouteGuard moduleId="MonthlyEntry" moduleName="Monthly Entry">
+                <MonthlyEntry />
+              </ModuleRouteGuard>
+            } 
+          />
+          <Route 
+            path="/monthly-reports" 
+            element={
+              <ModuleRouteGuard moduleId="MonthlyReports" moduleName="Monthly Reports">
+                <MonthlyReports />
+              </ModuleRouteGuard>
+            } 
+          />
+          <Route 
+            path="/downtime-entry" 
+            element={
+              <ModuleRouteGuard moduleId="DowntimeEntry" moduleName="Downtime Entry">
+                <DowntimeEntry />
+              </ModuleRouteGuard>
+            } 
+          />
+          <Route 
+            path="/downtime-reports" 
+            element={
+              <ModuleRouteGuard moduleId="DowntimeReports" moduleName="Downtime Reports">
+                <DowntimeReports />
+              </ModuleRouteGuard>
+            } 
+          />
+          <Route 
+            path="/settings" 
+            element={
+              <ModuleRouteGuard moduleId="Settings" moduleName="Settings">
+                <Settings />
+              </ModuleRouteGuard>
+            } 
+          />
+          <Route 
+            path="/notice-generator" 
+            element={
+              <ModuleRouteGuard moduleId="NoticeGenerator" moduleName="Notice Generator">
+                <NoticeGenerator />
+              </ModuleRouteGuard>
+            } 
+          />
+          <Route 
+            path="/sim-finder" 
+            element={
+              <ModuleRouteGuard moduleId="SimFinder" moduleName="SIM Finder">
+                <SimFinder />
+              </ModuleRouteGuard>
+            } 
+          />
+          <Route 
+            path="/analytics" 
+            element={
+              <ModuleRouteGuard moduleId="Analytics" moduleName="Analytics">
+                <Analytics />
+              </ModuleRouteGuard>
+            } 
+          />
+          <Route 
+            path="/weekly-report" 
+            element={
+              <ModuleRouteGuard moduleId="WeeklyReport" moduleName="Weekly Report">
+                <WeeklyReport />
+              </ModuleRouteGuard>
+            } 
+          />
           
           {/* Sales Module Routes */}
-          <Route path="/sales" element={<Navigate to="/sales/dashboard" replace />} />
-          <Route path="/sales/dashboard" element={<SalesDashboard />} />
-          <Route path="/sales/add" element={<AddSales />} />
-          <Route path="/sales/report" element={<SalesReport />} />
+          <Route 
+            path="/sales" 
+            element={
+              <ModuleRouteGuard moduleId="Sales" moduleName="Sales Management">
+                <Navigate to="/sales/dashboard" replace />
+              </ModuleRouteGuard>
+            } 
+          />
+          <Route 
+            path="/sales/dashboard" 
+            element={
+              <ModuleRouteGuard moduleId="Sales" moduleName="Sales Management">
+                <SalesDashboard />
+              </ModuleRouteGuard>
+            } 
+          />
+          <Route 
+            path="/sales/add" 
+            element={
+              <ModuleRouteGuard moduleId="Sales" moduleName="Sales Management">
+                <AddSales />
+              </ModuleRouteGuard>
+            } 
+          />
+          <Route 
+            path="/sales/report" 
+            element={
+              <ModuleRouteGuard moduleId="Sales" moduleName="Sales Management">
+                <SalesReport />
+              </ModuleRouteGuard>
+            } 
+          />
 
           {/* Retention Module Routes */}
-          <Route path="/retention" element={<Navigate to="/retention/dashboard" replace />} />
-          <Route path="/retention/dashboard" element={<RetentionDashboard />} />
-          <Route path="/retention/customers" element={<RetentionCustomers />} />
-          <Route path="/retention/assignment" element={<CustomerAssignment />} />
-          <Route path="/retention/team" element={<TeamMembers />} />
-          <Route path="/retention/followup" element={<MonthlyFollowup />} />
-          <Route path="/retention/feedback" element={<CustomerFeedback />} />
-          <Route path="/retention/reports" element={<RetentionReports />} />
+          <Route 
+            path="/retention" 
+            element={
+              <ModuleRouteGuard moduleId="Retention" moduleName="Client Retention">
+                <Navigate to="/retention/dashboard" replace />
+              </ModuleRouteGuard>
+            } 
+          />
+          <Route 
+            path="/retention/dashboard" 
+            element={
+              <ModuleRouteGuard moduleId="Retention" moduleName="Client Retention">
+                <RetentionDashboard />
+              </ModuleRouteGuard>
+            } 
+          />
+          <Route 
+            path="/retention/customers" 
+            element={
+              <ModuleRouteGuard moduleId="Retention" moduleName="Client Retention">
+                <RetentionCustomers />
+              </ModuleRouteGuard>
+            } 
+          />
+          <Route 
+            path="/retention/assignment" 
+            element={
+              <ModuleRouteGuard moduleId="Retention" moduleName="Client Retention">
+                <CustomerAssignment />
+              </ModuleRouteGuard>
+            } 
+          />
+          <Route 
+            path="/retention/team" 
+            element={
+              <ModuleRouteGuard moduleId="Retention" moduleName="Client Retention">
+                <TeamMembers />
+              </ModuleRouteGuard>
+            } 
+          />
+          <Route 
+            path="/retention/followup" 
+            element={
+              <ModuleRouteGuard moduleId="Retention" moduleName="Client Retention">
+                <MonthlyFollowup />
+              </ModuleRouteGuard>
+            } 
+          />
+          <Route 
+            path="/retention/feedback" 
+            element={
+              <ModuleRouteGuard moduleId="Retention" moduleName="Client Retention">
+                <CustomerFeedback />
+              </ModuleRouteGuard>
+            } 
+          />
+          <Route 
+            path="/retention/reports" 
+            element={
+              <ModuleRouteGuard moduleId="Retention" moduleName="Client Retention">
+                <RetentionReports />
+              </ModuleRouteGuard>
+            } 
+          />
 
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLoginPage />} />

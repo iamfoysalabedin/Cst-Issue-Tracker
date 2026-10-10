@@ -74,6 +74,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
     window.addEventListener('admin-auth-changed', handleAuthChange);
     window.addEventListener('module-config-changed', handleConfigChange);
+
+    // Initial remote fetch so any newly opened browser immediately reflects disabled modules
+    adminAuthService.fetchModuleConfig().then((fresh) => {
+      setModuleConfig(fresh);
+    });
+
     return () => {
       window.removeEventListener('admin-auth-changed', handleAuthChange);
       window.removeEventListener('module-config-changed', handleConfigChange);

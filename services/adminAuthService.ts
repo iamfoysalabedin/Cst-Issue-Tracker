@@ -1,3 +1,5 @@
+import { supabase } from '../lib/supabase';
+
 export interface ModuleConfig {
   Dashboard: boolean;
   Sales: boolean;
@@ -115,9 +117,98 @@ export const adminAuthService = {
     return { ...DEFAULT_MODULE_CONFIG };
   },
 
+  isModuleEnabled(moduleId: keyof ModuleConfig): boolean {
+    const config = this.getModuleConfig();
+    return config[moduleId] !== false;
+  },
+
+  async fetchModuleConfig(): Promise<ModuleConfig> {
+    let remoteConfig: Partial<ModuleConfig> | null = null;
+
+    // 1. Try server API endpoint first (works across all browsers and devices)
+    try {
+      const res = await fetch('/api/admin/module-config', {
+        headers: { 'Cache-Control': 'no-cache' }
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.config) {
+          remoteConfig = json.config;
+        }
+      }
+    } catch {
+      // Server API might be unavailable in direct client test or offline
+    }
+
+    // 2. If server API returned nothing, fetch from Supabase settings table
+    if (!remoteConfig) {
+      try {
+        const { data, error } = await supabase
+          .from('settings')
+          .select('name')
+          .eq('category', 'module_config')
+          .limit(1);
+
+        if (!error && data && data.length > 0 && data[0].name) {
+          remoteConfig = JSON.parse(data[0].name);
+        }
+      } catch (err) {
+        console.warn('Failed to fetch module config from Supabase:', err);
+      }
+    }
+
+    if (remoteConfig) {
+      const merged: ModuleConfig = { ...DEFAULT_MODULE_CONFIG, ...remoteConfig };
+      const currentStored = localStorage.getItem(STORAGE_KEYS.MODULE_CONFIG);
+      const newStored = JSON.stringify(merged);
+
+      if (currentStored !== newStored) {
+        localStorage.setItem(STORAGE_KEYS.MODULE_CONFIG, newStored);
+        window.dispatchEvent(new CustomEvent('module-config-changed', { detail: merged }));
+      }
+      return merged;
+    }
+
+    return this.getModuleConfig();
+  },
+
   saveModuleConfig(config: ModuleConfig): void {
-    localStorage.setItem(STORAGE_KEYS.MODULE_CONFIG, JSON.stringify(config));
+    const serialized = JSON.stringify(config);
+    localStorage.setItem(STORAGE_KEYS.MODULE_CONFIG, serialized);
     window.dispatchEvent(new CustomEvent('module-config-changed', { detail: config }));
+
+    // 1. Persist to server API
+    fetch('/api/admin/module-config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ config }),
+    }).catch(err => {
+      console.warn('Could not save module config to server API:', err);
+    });
+
+    // 2. Persist to Supabase settings table for cloud/multi-browser persistence
+    (async () => {
+      try {
+        const { data: existing } = await supabase
+          .from('settings')
+          .select('id')
+          .eq('category', 'module_config')
+          .limit(1);
+
+        if (existing && existing.length > 0) {
+          await supabase
+            .from('settings')
+            .update({ name: serialized })
+            .eq('id', existing[0].id);
+        } else {
+          await supabase
+            .from('settings')
+            .insert([{ category: 'module_config', name: serialized }]);
+        }
+      } catch (err) {
+        console.warn('Could not persist module config to Supabase:', err);
+      }
+    })();
   },
 
   toggleModule(moduleId: keyof ModuleConfig): ModuleConfig {
@@ -151,3 +242,25 @@ export const adminAuthService = {
     return updated;
   }
 };
+
+// Initialize multi-browser background synchronization
+if (typeof window !== 'undefined') {
+  // Sync on initial app load
+  adminAuthService.fetchModuleConfig();
+
+  // Listen to cross-tab storage changes
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'app_sidebar_modules_config_v1') {
+      try {
+        const parsed = e.newValue ? JSON.parse(e.newValue) : DEFAULT_MODULE_CONFIG;
+        window.dispatchEvent(new CustomEvent('module-config-changed', { detail: parsed }));
+      } catch {}
+    }
+  });
+
+  // Background sync interval (every 4 seconds) to detect changes from other browsers
+  setInterval(() => {
+    adminAuthService.fetchModuleConfig();
+  }, 4000);
+}
+

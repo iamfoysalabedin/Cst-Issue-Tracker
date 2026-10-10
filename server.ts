@@ -2,16 +2,83 @@ import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import { google } from 'googleapis';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const DATA_DIR = path.join(process.cwd(), 'data');
+const MODULE_CONFIG_FILE = path.join(DATA_DIR, 'module-config.json');
+
+const DEFAULT_SERVER_MODULE_CONFIG = {
+  Dashboard: true,
+  Sales: true,
+  Retention: true,
+  IssueEntry: true,
+  IssueReports: true,
+  Analytics: true,
+  WeeklyReport: true,
+  MonthlyEntry: true,
+  MonthlyReports: true,
+  DowntimeEntry: true,
+  DowntimeReports: true,
+  NoticeGenerator: true,
+  SimFinder: true,
+  Settings: true,
+};
+
+function readModuleConfigFromFile() {
+  try {
+    if (fs.existsSync(MODULE_CONFIG_FILE)) {
+      const raw = fs.readFileSync(MODULE_CONFIG_FILE, 'utf-8');
+      return { ...DEFAULT_SERVER_MODULE_CONFIG, ...JSON.parse(raw) };
+    }
+  } catch (err) {
+    console.error('Error reading module config from file:', err);
+  }
+  return { ...DEFAULT_SERVER_MODULE_CONFIG };
+}
+
+function writeModuleConfigToFile(config: any) {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    fs.writeFileSync(MODULE_CONFIG_FILE, JSON.stringify(config, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Error writing module config to file:', err);
+  }
+}
 
 async function startServer() {
   const app = express();
   const PORT = 3000;
 
   app.use(express.json());
+
+  // Global Module Configuration API (Synchronized across all browsers and devices)
+  app.get('/api/admin/module-config', (req, res) => {
+    try {
+      const config = readModuleConfigFromFile();
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+      res.status(200).json({ success: true, config });
+    } catch (error: any) {
+      console.error('Error fetching module config:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  app.post('/api/admin/module-config', (req, res) => {
+    try {
+      const updatedConfig = { ...DEFAULT_SERVER_MODULE_CONFIG, ...(req.body?.config || req.body) };
+      writeModuleConfigToFile(updatedConfig);
+      res.status(200).json({ success: true, config: updatedConfig });
+    } catch (error: any) {
+      console.error('Error saving module config:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
 
   // Google Sheets API Endpoint to append issue
   app.post('/api/google-sheets/append', async (req, res) => {
