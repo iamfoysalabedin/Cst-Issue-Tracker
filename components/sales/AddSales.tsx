@@ -29,6 +29,15 @@ import { salesService, SALES_TABLE_SQL } from '../../services/salesService';
 import { SalesProductItem, PaymentStatus } from '../../types/sales';
 import { dbService } from '../../services/dbService';
 
+// Form Product Item allowing blank initial/typed numeric fields
+interface FormProductItem {
+  id: string;
+  name: string;
+  unit_price: number | '';
+  quantity: number | '';
+  subtotal: number;
+}
+
 export const AddSales: React.FC = () => {
   const navigate = useNavigate();
 
@@ -38,23 +47,23 @@ export const AddSales: React.FC = () => {
   const [contactPersonName, setContactPersonName] = useState('');
   const [contactPersonNumber, setContactPersonNumber] = useState('');
   
-  // Multiple Products (written/typed directly)
-  const [products, setProducts] = useState<SalesProductItem[]>([
+  // Multiple Products (written/typed directly, starts blank)
+  const [products, setProducts] = useState<FormProductItem[]>([
     {
       id: `p-${Date.now()}-0`,
       name: '',
-      unit_price: 0,
-      quantity: 1,
+      unit_price: '',
+      quantity: '',
       subtotal: 0,
     },
   ]);
 
-  // SaaS Package (typed directly)
+  // SaaS Package (typed directly, starts blank)
   const [saasPackage, setSaasPackage] = useState('');
-  const [saasPackagePrice, setSaasPackagePrice] = useState<number>(0);
+  const [saasPackagePrice, setSaasPackagePrice] = useState<number | ''>('');
   
   // Financials & Sold By (loaded from setting assigned persons)
-  const [discount, setDiscount] = useState<number>(0);
+  const [discount, setDiscount] = useState<number | ''>('');
   const [assignedPersons, setAssignedPersons] = useState<string[]>([]);
   const [soldBy, setSoldBy] = useState('');
   const [customRep, setCustomRep] = useState('');
@@ -102,8 +111,8 @@ export const AddSales: React.FC = () => {
       {
         id: newId,
         name: '',
-        unit_price: 0,
-        quantity: 1,
+        unit_price: '',
+        quantity: '',
         subtotal: 0,
       },
     ]);
@@ -116,8 +125,8 @@ export const AddSales: React.FC = () => {
         {
           id: `p-${Date.now()}-0`,
           name: '',
-          unit_price: 0,
-          quantity: 1,
+          unit_price: '',
+          quantity: '',
           subtotal: 0,
         },
       ]);
@@ -127,27 +136,41 @@ export const AddSales: React.FC = () => {
     setProducts(updated);
   };
 
-  const handleProductChange = (index: number, field: keyof SalesProductItem, value: any) => {
+  const handleProductChange = (index: number, field: 'name' | 'unit_price' | 'quantity', value: any) => {
     const updated = [...products];
     const item = { ...updated[index] };
 
     if (field === 'name') {
       item.name = value;
     } else if (field === 'unit_price') {
-      item.unit_price = Math.max(0, Number(value) || 0);
+      if (value === '' || value === undefined || value === null) {
+        item.unit_price = '';
+      } else {
+        const num = Number(value);
+        item.unit_price = isNaN(num) ? '' : Math.max(0, num);
+      }
     } else if (field === 'quantity') {
-      item.quantity = Math.max(1, Number(value) || 1);
+      if (value === '' || value === undefined || value === null) {
+        item.quantity = '';
+      } else {
+        const num = Number(value);
+        item.quantity = isNaN(num) ? '' : Math.max(0, num);
+      }
     }
 
-    item.subtotal = item.unit_price * item.quantity;
+    const priceNum = typeof item.unit_price === 'number' ? item.unit_price : 0;
+    const qtyNum = typeof item.quantity === 'number' ? item.quantity : 0;
+    item.subtotal = priceNum * qtyNum;
     updated[index] = item;
     setProducts(updated);
   };
 
   // Calculations
   const productsTotal = products.reduce((sum, p) => sum + (p.subtotal || 0), 0);
-  const totalItemsCount = products.reduce((sum, p) => sum + (p.quantity || 0), 0);
-  const finalTotalValue = Math.max(0, productsTotal + saasPackagePrice - (discount || 0));
+  const totalItemsCount = products.reduce((sum, p) => sum + (typeof p.quantity === 'number' ? p.quantity : 0), 0);
+  const packagePriceNum = typeof saasPackagePrice === 'number' ? saasPackagePrice : 0;
+  const discountNum = typeof discount === 'number' ? discount : 0;
+  const finalTotalValue = Math.max(0, productsTotal + packagePriceNum - discountNum);
 
   // Copy SQL helper
   const handleCopySql = () => {
@@ -181,12 +204,29 @@ export const AddSales: React.FC = () => {
       return;
     }
 
+    // Check if any product has empty price or quantity
+    const hasIncompleteProduct = validProducts.some(
+      (p) => p.unit_price === '' || p.quantity === '' || Number(p.quantity) <= 0
+    );
+    if (hasIncompleteProduct) {
+      setError('Please enter valid Price and Quantity (Qty) for all product items.');
+      return;
+    }
+
     if (!soldBy.trim() || (soldBy === 'Other' && !customRep.trim())) {
       setError('Please select who made this sale (Sold By).');
       return;
     }
 
     const finalSoldBy = soldBy === 'Other' ? (customRep.trim() || 'Custom Rep') : soldBy;
+
+    const mappedProducts: SalesProductItem[] = validProducts.map((p) => ({
+      id: p.id,
+      name: p.name.trim(),
+      unit_price: Number(p.unit_price) || 0,
+      quantity: Number(p.quantity) || 1,
+      subtotal: p.subtotal || 0,
+    }));
 
     setIsSubmitting(true);
     try {
@@ -195,10 +235,10 @@ export const AddSales: React.FC = () => {
         company_name: companyName,
         contact_person_name: contactPersonName,
         contact_person_number: contactPersonNumber,
-        products: validProducts,
+        products: mappedProducts,
         saas_package: saasPackage,
-        saas_package_price: saasPackagePrice,
-        discount: Number(discount) || 0,
+        saas_package_price: packagePriceNum,
+        discount: discountNum,
         total_value: finalTotalValue,
         sold_by: finalSoldBy,
         payment_status: paymentStatus,
@@ -230,14 +270,14 @@ export const AddSales: React.FC = () => {
       {
         id: `p-${Date.now()}-0`,
         name: '',
-        unit_price: 0,
-        quantity: 1,
+        unit_price: '',
+        quantity: '',
         subtotal: 0,
       },
     ]);
     setSaasPackage('');
-    setSaasPackagePrice(0);
-    setDiscount(0);
+    setSaasPackagePrice('');
+    setDiscount('');
     setSoldBy(assignedPersons[0] || '');
     setCustomRep('');
     setPaymentStatus('Paid');
@@ -578,8 +618,11 @@ export const AddSales: React.FC = () => {
                     type="number"
                     min="0"
                     value={saasPackagePrice}
-                    onChange={(e) => setSaasPackagePrice(Number(e.target.value) || 0)}
-                    placeholder="0"
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSaasPackagePrice(val === '' ? '' : Math.max(0, Number(val)));
+                    }}
+                    placeholder="Package Fee"
                     className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
                   />
                 </div>
@@ -659,7 +702,11 @@ export const AddSales: React.FC = () => {
                     type="number"
                     min="0"
                     value={discount}
-                    onChange={(e) => setDiscount(Number(e.target.value) || 0)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setDiscount(val === '' ? '' : Math.max(0, Number(val)));
+                    }}
+                    placeholder="0"
                     className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-hidden"
                   />
                 </div>
@@ -703,15 +750,15 @@ export const AddSales: React.FC = () => {
                 <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
                   <span>SaaS Package Fee:</span>
                   <span className="font-mono font-semibold text-slate-900 dark:text-white">
-                    + ৳{saasPackagePrice.toLocaleString()}
+                    + ৳{packagePriceNum.toLocaleString()}
                   </span>
                 </div>
 
-                {discount > 0 && (
+                {discountNum > 0 && (
                   <div className="flex items-center justify-between text-rose-600 dark:text-rose-400">
                     <span>Discount applied:</span>
                     <span className="font-mono font-semibold">
-                      - ৳{discount.toLocaleString()}
+                      - ৳{discountNum.toLocaleString()}
                     </span>
                   </div>
                 )}
