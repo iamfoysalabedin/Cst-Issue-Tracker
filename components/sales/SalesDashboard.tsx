@@ -68,8 +68,13 @@ export const SalesDashboard: React.FC = () => {
     });
 
     // Fetch latest sales from Supabase
-    salesService.fetchSalesFromDb().then(() => {
-      loadData();
+    salesService.fetchSalesFromDb().then((fresh) => {
+      if (fresh && Array.isArray(fresh)) {
+        setSales(fresh);
+        setMetrics(salesService.getSalesMetrics(selectedMonth, selectedRep, selectedYear));
+      } else {
+        loadData();
+      }
     }).catch(() => {});
   }, []);
 

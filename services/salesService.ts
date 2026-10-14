@@ -134,12 +134,9 @@ export const SALES_REPRESENTATIVES = [
   'Fariha',
 ];
 
-// Dummy sale IDs to purge from any local storage cache
-export const DUMMY_SALE_IDS = new Set([
-  'sale-001', 'sale-002', 'sale-003', 'sale-004', 'sale-005',
-  'sale-006', 'sale-007', 'sale-008', 'sale-009', 'sale-010',
-  'SL-2026-001', 'SL-2026-002', 'SL-2026-003', 'SL-2026-004', 'SL-2026-005',
-  'SL-2026-006', 'SL-2026-007', 'SL-2026-008', 'SL-2026-009', 'SL-2026-010',
+// Legacy dummy sale IDs to purge from cache if any exist - strictly never filter real sales
+export const DUMMY_SALE_IDS = new Set<string>([
+  'mock-sale-001', 'mock-sale-002', 'demo-sale-1'
 ]);
 
 const INITIAL_SALES: SalesRecord[] = [];
@@ -165,15 +162,32 @@ export const salesService = {
         return this.getSales();
       }
 
-      if (data && data.length > 0) {
-        const records = data
+      if (data && data.length >= 0) {
+        const dbRecords = data
           .map(mapDbRowToRecord)
           .filter((r) => !DUMMY_SALE_IDS.has(r.id) && !DUMMY_SALE_IDS.has(r.sale_id));
-        // Persist fresh data from Supabase to local storage
-        this.saveSales(records);
-        return records;
-      } else if (data && data.length === 0) {
-        return this.getSales();
+
+        // Merge with any existing local records to avoid losing freshly added sales
+        const local = this.getSalesLocalOnly();
+        const map = new Map<string, SalesRecord>();
+        local.forEach((r) => {
+          if (!DUMMY_SALE_IDS.has(r.id) && !DUMMY_SALE_IDS.has(r.sale_id)) {
+            map.set(r.id, r);
+          }
+        });
+        dbRecords.forEach((r) => {
+          map.set(r.id, r);
+        });
+
+        const merged = Array.from(map.values()).sort((a, b) => {
+          const dComp = (b.date || '').localeCompare(a.date || '');
+          if (dComp !== 0) return dComp;
+          return (b.created_at || '').localeCompare(a.created_at || '');
+        });
+
+        // Persist fresh combined data to local storage
+        this.saveSales(merged);
+        return merged;
       }
     } catch (err) {
       console.error('Failed to fetch sales from Supabase:', err);
@@ -186,10 +200,10 @@ export const salesService = {
       const payload = mapRecordToDbRow(record);
       const { error } = await supabase
         .from('sales')
-        .insert([payload]);
+        .upsert([payload], { onConflict: 'id' });
 
       if (error) {
-        console.warn('Supabase sales insert response:', error);
+        console.warn('Supabase sales upsert response:', error);
         return {
           success: false,
           error: error.message,
@@ -262,42 +276,33 @@ export const salesService = {
     }
   },
 
-  getSales(): SalesRecord[] {
+  getSalesLocalOnly(): SalesRecord[] {
     try {
       if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
         const data = localStorage.getItem(STORAGE_KEY);
         if (data) {
           const parsed = JSON.parse(data);
           if (Array.isArray(parsed)) {
-            // Trigger one background fetch from Supabase on first call in session
-            if (!this._hasAttemptedDbFetch) {
-              this._hasAttemptedDbFetch = true;
-              this.fetchSalesFromDb().catch(() => {});
-            }
-
-            // Filter out any dummy sales
-            const cleaned = parsed.filter(
+            return parsed.filter(
               (p: any) => !DUMMY_SALE_IDS.has(p.id) && !DUMMY_SALE_IDS.has(p.sale_id)
             );
-
-            // If dummy records were removed, update localStorage
-            if (cleaned.length !== parsed.length) {
-              localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned));
-            }
-
-            return cleaned;
           }
         }
       }
     } catch (e) {
       console.error('Failed to load sales from storage', e);
     }
+    return [];
+  },
+
+  getSales(): SalesRecord[] {
+    const list = this.getSalesLocalOnly();
 
     if (!this._hasAttemptedDbFetch && typeof window !== 'undefined') {
       this._hasAttemptedDbFetch = true;
       this.fetchSalesFromDb().catch(() => {});
     }
-    return [];
+    return list;
   },
 
   saveSales(sales: SalesRecord[]): void {
@@ -317,7 +322,7 @@ export const salesService = {
     return list.find((s) => s.id === id || s.sale_id === id);
   },
 
-  addSale(saleData: {
+  createSaleRecord(saleData: {
     date: string;
     company_name: string;
     contact_person_name: string;
@@ -331,11 +336,23 @@ export const salesService = {
     payment_status: 'Paid' | 'Partial' | 'Pending' | 'Due';
     notes?: string;
   }): SalesRecord {
-    const current = this.getSales();
+    const current = this.getSalesLocalOnly();
     const id = `sale-${Date.now()}`;
-    const year = saleData.date ? saleData.date.substring(0, 4) : new Date().getFullYear();
-    const count = current.length + 1;
-    const sale_id = `SL-${year}-${String(count).padStart(3, '0')}`;
+    const year = saleData.date ? saleData.date.substring(0, 4) : String(new Date().getFullYear());
+    
+    // Find highest index among existing sales for this year to prevent collisions
+    let maxNum = 0;
+    current.forEach((s) => {
+      if (s.sale_id && s.sale_id.startsWith(`SL-${year}-`)) {
+        const parts = s.sale_id.split('-');
+        const n = parseInt(parts[2], 10);
+        if (!isNaN(n) && n > maxNum) {
+          maxNum = n;
+        }
+      }
+    });
+    const nextNum = Math.max(current.length, maxNum) + 1;
+    const sale_id = `SL-${year}-${String(nextNum).padStart(3, '0')}`;
 
     // Calculate product subtotals if not present
     const productsWithSubtotal = (saleData.products || []).map((p, idx) => ({
@@ -353,7 +370,7 @@ export const salesService = {
       ? Number(saleData.total_value)
       : Math.max(0, productsSum + saasPrice - discount);
 
-    const newRecord: SalesRecord = {
+    return {
       id,
       sale_id,
       date: saleData.date || new Date().toISOString().split('T')[0],
@@ -371,7 +388,24 @@ export const salesService = {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
+  },
 
+  addSale(saleData: {
+    date: string;
+    company_name: string;
+    contact_person_name: string;
+    contact_person_number: string;
+    products: SalesProductItem[];
+    saas_package: string;
+    saas_package_price?: number;
+    discount?: number;
+    total_value?: number;
+    sold_by: string;
+    payment_status: 'Paid' | 'Partial' | 'Pending' | 'Due';
+    notes?: string;
+  }): SalesRecord {
+    const newRecord = this.createSaleRecord(saleData);
+    const current = this.getSalesLocalOnly();
     const updatedList = [newRecord, ...current];
     this.saveSales(updatedList);
 
@@ -397,10 +431,14 @@ export const salesService = {
     payment_status: 'Paid' | 'Partial' | 'Pending' | 'Due';
     notes?: string;
   }): Promise<{ record: SalesRecord; supabaseSaved: boolean; error?: string; isTableMissing?: boolean }> {
-    const record = this.addSale(saleData);
-    const res = await this.saveToSupabase(record);
+    const newRecord = this.createSaleRecord(saleData);
+    const current = this.getSalesLocalOnly();
+    const updatedList = [newRecord, ...current];
+    this.saveSales(updatedList);
+
+    const res = await this.saveToSupabase(newRecord);
     return {
-      record,
+      record: newRecord,
       supabaseSaved: res.success,
       error: res.error,
       isTableMissing: res.isTableMissing,

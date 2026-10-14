@@ -60,8 +60,12 @@ export const SalesReport: React.FC = () => {
   useEffect(() => {
     loadData();
     // Fetch latest data from Supabase
-    salesService.fetchSalesFromDb().then(() => {
-      loadData();
+    salesService.fetchSalesFromDb().then((fresh) => {
+      if (fresh && Array.isArray(fresh)) {
+        setSales(fresh);
+      } else {
+        loadData();
+      }
     }).catch(() => {});
 
     dbService.getSettingsByCategory('assigned_person').then((items) => {
