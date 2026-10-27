@@ -746,164 +746,258 @@ const IssueReports: React.FC = () => {
 
       {/* Edit Modal */}
       {editingIssue && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800">
-              <h3 className="font-bold text-base text-slate-900 dark:text-white">Edit Issue</h3>
-              <button onClick={() => setEditingIssue(null)} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-3xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh] my-auto overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-900">
+              <div>
+                <h3 className="font-bold text-base text-slate-900 dark:text-white">Edit Issue Ticket</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Update issue details, timing, status, and feedback</p>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setEditingIssue(null)} 
+                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+              >
                 <X size={18} />
               </button>
             </div>
-            <form onSubmit={handleUpdate} className="p-4 space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Client Name</label>
-                  <input 
-                    type="text"
-                    value={editingIssue.client_name}
-                    onChange={(e) => setEditingIssue({...editingIssue, client_name: e.target.value})}
-                    className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Type</label>
-                  <select 
-                    value={editingIssue.issue_type}
-                    onChange={(e) => setEditingIssue({...editingIssue, issue_type: e.target.value})}
-                    className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
-                  >
-                    {options.issueTypes.map(t => <option key={t.id} value={t.name} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">{t.name}</option>)}
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Segment</label>
-                  <select 
-                    value={editingIssue.segment || ''}
-                    onChange={(e) => setEditingIssue({...editingIssue, segment: e.target.value})}
-                    className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
-                  >
-                    <option value="" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Select Segment</option>
-                    {options.segments.map(s => <option key={s.id} value={s.name} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">{s.name}</option>)}
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                      ClickUp Ticket ID {isSystemBug(editingIssue.issue_type) && <span className="text-rose-500">*</span>}
+
+            {/* Modal Form with Scrollable Body */}
+            <form onSubmit={handleUpdate} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+              <div className="p-6 overflow-y-auto space-y-5 flex-1">
+                {/* Basic Information Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Client Name */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      Client Name <span className="text-rose-500">*</span>
                     </label>
-                    {isSystemBug(editingIssue.issue_type) && (
-                      <span className="text-[9px] font-semibold text-rose-500 bg-rose-50 dark:bg-rose-900/30 px-1.5 py-0.2 rounded border border-rose-200/50 dark:border-rose-800/40">
-                        Mandatory
-                      </span>
-                    )}
+                    <input 
+                      type="text"
+                      required
+                      value={editingIssue.client_name}
+                      onChange={(e) => setEditingIssue({...editingIssue, client_name: e.target.value})}
+                      className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
+                    />
                   </div>
-                  <input 
-                    type="text"
-                    value={editingIssue.clickup_ticket_id || ''}
-                    onChange={(e) => setEditingIssue({...editingIssue, clickup_ticket_id: e.target.value})}
-                    placeholder={isSystemBug(editingIssue.issue_type) ? "e.g. #8678xyz (Required)" : "e.g. #8678xyz"}
-                    className={`w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs ${
-                      isSystemBug(editingIssue.issue_type) && !editingIssue.clickup_ticket_id?.trim()
-                        ? 'border-amber-300 dark:border-amber-700/70 focus:border-indigo-500'
-                        : 'border-slate-200 dark:border-slate-700'
-                    }`}
-                  />
+
+                  {/* Issue Type */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      Issue Type <span className="text-rose-500">*</span>
+                    </label>
+                    <select 
+                      value={editingIssue.issue_type}
+                      onChange={(e) => setEditingIssue({...editingIssue, issue_type: e.target.value})}
+                      className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
+                    >
+                      {options.issueTypes.map(t => (
+                        <option key={t.id} value={t.name} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+                          {t.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Segment */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      Segment
+                    </label>
+                    <select 
+                      value={editingIssue.segment || ''}
+                      onChange={(e) => setEditingIssue({...editingIssue, segment: e.target.value})}
+                      className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
+                    >
+                      <option value="" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Select Segment</option>
+                      {options.segments.map(s => (
+                        <option key={s.id} value={s.name} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+                          {s.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* ClickUp Ticket ID */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                        ClickUp Ticket ID {isSystemBug(editingIssue.issue_type) && <span className="text-rose-500">*</span>}
+                      </label>
+                      {isSystemBug(editingIssue.issue_type) && (
+                        <span className="text-[10px] font-semibold text-rose-500 bg-rose-50 dark:bg-rose-900/30 px-2 py-0.5 rounded border border-rose-200/50 dark:border-rose-800/40">
+                          Required for Bugs
+                        </span>
+                      )}
+                    </div>
+                    <input 
+                      type="text"
+                      value={editingIssue.clickup_ticket_id || ''}
+                      onChange={(e) => setEditingIssue({...editingIssue, clickup_ticket_id: e.target.value})}
+                      placeholder={isSystemBug(editingIssue.issue_type) ? "e.g. #8678xyz (Required)" : "e.g. #8678xyz"}
+                      className={`w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs ${
+                        isSystemBug(editingIssue.issue_type) && !editingIssue.clickup_ticket_id?.trim()
+                          ? 'border-amber-400 dark:border-amber-600 bg-amber-50/20 dark:bg-amber-950/20'
+                          : 'border-slate-200 dark:border-slate-700'
+                      }`}
+                    />
+                  </div>
+
+                  {/* Category */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      Category
+                    </label>
+                    <select 
+                      value={editingIssue.category}
+                      onChange={(e) => setEditingIssue({...editingIssue, category: e.target.value})}
+                      className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
+                    >
+                      {options.categories.map(c => (
+                        <option key={c.id} value={c.name} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Priority */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      Priority <span className="text-rose-500">*</span>
+                    </label>
+                    <select 
+                      value={editingIssue.priority}
+                      onChange={(e) => setEditingIssue({...editingIssue, priority: e.target.value})}
+                      className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
+                    >
+                      {options.priorities.map(p => (
+                        <option key={p.id} value={p.name} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+                          {p.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Status */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      Status <span className="text-rose-500">*</span>
+                    </label>
+                    <select 
+                      value={editingIssue.status}
+                      onChange={(e) => setEditingIssue({...editingIssue, status: e.target.value})}
+                      className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
+                    >
+                      {options.statuses.map(s => (
+                        <option key={s.id} value={s.name} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+                          {s.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Assigned Person */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      Assigned To <span className="text-rose-500">*</span>
+                    </label>
+                    <select 
+                      value={editingIssue.assigned_person}
+                      onChange={(e) => setEditingIssue({...editingIssue, assigned_person: e.target.value})}
+                      className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
+                    >
+                      {options.assignedPersons.map(ap => (
+                        <option key={ap.id} value={ap.name} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+                          {ap.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Category</label>
-                  <select 
-                    value={editingIssue.category}
-                    onChange={(e) => setEditingIssue({...editingIssue, category: e.target.value})}
-                    className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
-                  >
-                    {options.categories.map(c => <option key={c.id} value={c.name} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">{c.name}</option>)}
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Priority</label>
-                  <select 
-                    value={editingIssue.priority}
-                    onChange={(e) => setEditingIssue({...editingIssue, priority: e.target.value})}
-                    className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
-                  >
-                    {options.priorities.map(p => <option key={p.id} value={p.name} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">{p.name}</option>)}
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</label>
-                  <select 
-                    value={editingIssue.status}
-                    onChange={(e) => setEditingIssue({...editingIssue, status: e.target.value})}
-                    className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
-                  >
-                    {options.statuses.map(s => <option key={s.id} value={s.name} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">{s.name}</option>)}
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ticket Create Time</label>
-                  <input 
-                    type="datetime-local"
-                    value={formatForDateTimeLocal(editingIssue.created_at || editingIssue.issue_date)}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setEditingIssue({
-                        ...editingIssue,
-                        created_at: val ? new Date(val).toISOString() : '',
-                        issue_date: val ? val.split('T')[0] : ''
-                      });
-                    }}
-                    className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Client Reporting Time</label>
-                  <input 
-                    type="time"
-                    value={convert12hTo24h(editingIssue.client_reporting_time || '')}
-                    onChange={(e) => setEditingIssue({...editingIssue, client_reporting_time: convert24hTo12h(e.target.value)})}
-                    className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Response Time</label>
-                  <input 
-                    type="time"
-                    value={convert12hTo24h(editingIssue.response_time || '')}
-                    onChange={(e) => setEditingIssue({...editingIssue, response_time: convert24hTo12h(e.target.value)})}
-                    className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Resolution Time</label>
-                  <input 
-                    type="time"
-                    value={convert12hTo24h(editingIssue.resolution_time || '')}
-                    onChange={(e) => setEditingIssue({...editingIssue, resolution_time: convert24hTo12h(e.target.value)})}
-                    className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
-                  />
+
+                {/* Timing & SLA Benchmarks */}
+                <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700/60 space-y-3">
+                  <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
+                    Timing & SLA Metrics
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        Ticket Create Time
+                      </label>
+                      <input 
+                        type="datetime-local"
+                        value={formatForDateTimeLocal(editingIssue.created_at || editingIssue.issue_date)}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setEditingIssue({
+                            ...editingIssue,
+                            created_at: val ? new Date(val).toISOString() : '',
+                            issue_date: val ? val.split('T')[0] : ''
+                          });
+                        }}
+                        className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        Client Reporting Time
+                      </label>
+                      <input 
+                        type="time"
+                        value={convert12hTo24h(editingIssue.client_reporting_time || '')}
+                        onChange={(e) => setEditingIssue({...editingIssue, client_reporting_time: convert24hTo12h(e.target.value)})}
+                        className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        Response Time
+                      </label>
+                      <input 
+                        type="time"
+                        value={convert12hTo24h(editingIssue.response_time || '')}
+                        onChange={(e) => setEditingIssue({...editingIssue, response_time: convert24hTo12h(e.target.value)})}
+                        className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        Resolution Time
+                      </label>
+                      <input 
+                        type="time"
+                        value={convert12hTo24h(editingIssue.resolution_time || '')}
+                        onChange={(e) => setEditingIssue({...editingIssue, resolution_time: convert24hTo12h(e.target.value)})}
+                        className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Bug Resolution & Feedback Section */}
-                <div className="col-span-2 bg-indigo-50/40 dark:bg-indigo-950/20 p-3 rounded-xl border border-indigo-100 dark:border-indigo-900/40 space-y-2.5">
+                <div className="bg-indigo-50/50 dark:bg-indigo-950/20 p-4 rounded-xl border border-indigo-100 dark:border-indigo-900/40 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 inline-block"></span>
-                      Bug Resolution & Feedback (Optional)
+                    <span className="text-[11px] font-bold text-indigo-800 dark:text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-indigo-500 inline-block"></span>
+                      Bug Resolution & Feedback
                     </span>
-                    <span className="text-[9px] text-slate-400 dark:text-slate-500">
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500">
                       {isSystemBug(editingIssue.issue_type) ? 'System Bug Feedback' : 'Optional Feedback'}
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                    <div className="space-y-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="space-y-1.5">
                       <label className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
                         Issue Resolved Confirmed
                       </label>
                       <select 
                         value={editingIssue.issue_resolved_confirmed || ''}
                         onChange={(e) => setEditingIssue({...editingIssue, issue_resolved_confirmed: e.target.value})}
-                        className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
+                        className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
                       >
                         <option value="">Select Response</option>
                         <option value="Yes">Yes</option>
@@ -912,14 +1006,14 @@ const IssueReports: React.FC = () => {
                       </select>
                     </div>
 
-                    <div className="space-y-1">
+                    <div className="space-y-1.5">
                       <label className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
                         Customer Satisfaction
                       </label>
                       <select 
                         value={editingIssue.customer_satisfaction || ''}
                         onChange={(e) => setEditingIssue({...editingIssue, customer_satisfaction: e.target.value})}
-                        className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
+                        className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
                       >
                         <option value="">Select Satisfaction</option>
                         <option value="Satisfied">Satisfied</option>
@@ -928,7 +1022,7 @@ const IssueReports: React.FC = () => {
                       </select>
                     </div>
 
-                    <div className="space-y-1">
+                    <div className="space-y-1.5">
                       <label className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
                         Feedback Date
                       </label>
@@ -936,24 +1030,43 @@ const IssueReports: React.FC = () => {
                         type="date"
                         value={editingIssue.feedback_date || ''}
                         onChange={(e) => setEditingIssue({...editingIssue, feedback_date: e.target.value})}
-                        className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
+                        className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
                       />
                     </div>
                   </div>
                 </div>
+
+                {/* Details Textarea */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    Issue Details <span className="text-rose-500">*</span>
+                  </label>
+                  <textarea 
+                    rows={4}
+                    required
+                    value={editingIssue.issue_details}
+                    onChange={(e) => setEditingIssue({...editingIssue, issue_details: e.target.value})}
+                    placeholder="Enter thorough details of the issue..."
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white text-xs leading-relaxed"
+                  />
+                </div>
               </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase">Details</label>
-                <textarea 
-                  rows={3}
-                  value={editingIssue.issue_details}
-                  onChange={(e) => setEditingIssue({...editingIssue, issue_details: e.target.value})}
-                  className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white resize-none text-xs"
-                />
-              </div>
-              <div className="flex gap-2 mt-4">
-                <button type="button" onClick={() => setEditingIssue(null)} className="flex-1 px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg font-bold text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Cancel</button>
-                <button type="submit" className="flex-1 px-3 py-2 gradient-bg text-white font-bold rounded-lg shadow-md hover:opacity-90 transition-opacity text-xs">Update Issue</button>
+
+              {/* Sticky Modal Footer */}
+              <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-sm shrink-0">
+                <button 
+                  type="button" 
+                  onClick={() => setEditingIssue(null)} 
+                  className="px-5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-xs text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 transition-colors shadow-xs cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer"
+                >
+                  Update Issue
+                </button>
               </div>
             </form>
           </div>
