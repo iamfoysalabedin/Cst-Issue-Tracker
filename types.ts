@@ -36,6 +36,9 @@ export interface Issue {
   response_time?: string;
   resolution_time?: string;
   client_reporting_time?: string;
+  issue_resolved_confirmed?: 'Yes' | 'No' | 'No Response' | string;
+  customer_satisfaction?: 'Satisfied' | 'Neutral' | 'Dissatisfied' | string;
+  feedback_date?: string;
 }
 
 export interface MonthlyEntry {

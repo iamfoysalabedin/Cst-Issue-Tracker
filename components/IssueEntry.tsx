@@ -1,8 +1,26 @@
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { dbService } from '../services/dbService';
 import { SettingItem } from '../types';
-import { CheckCircle, AlertCircle, Building2, Sparkles } from 'lucide-react';
+import { 
+  CheckCircle, 
+  AlertCircle, 
+  Building2, 
+  Sparkles,
+  Clock, 
+  User, 
+  Tag, 
+  Layers, 
+  AlertTriangle, 
+  Smile, 
+  Calendar, 
+  RotateCcw, 
+  FileText, 
+  Send,
+  CheckCircle2,
+  ExternalLink,
+  MessageSquare
+} from 'lucide-react';
 
 const convert24hTo12h = (time24: string): string => {
   if (!time24) return '';
@@ -33,6 +51,11 @@ const convert12hTo24h = (time12: string): string => {
   return `${String(hours).padStart(2, '0')}:${minutes}`;
 };
 
+const isSystemBug = (type?: string): boolean => {
+  if (!type) return false;
+  return type.toLowerCase().includes('bug');
+};
+
 const IssueEntry: React.FC = () => {
   const [formData, setFormData] = useState({
     client_name: '',
@@ -48,6 +71,9 @@ const IssueEntry: React.FC = () => {
     response_time: '',
     resolution_time: '',
     client_reporting_time: '',
+    issue_resolved_confirmed: '',
+    customer_satisfaction: '',
+    feedback_date: '',
   });
 
   const getCurrentTime12h = () => {
@@ -107,10 +133,9 @@ const IssueEntry: React.FC = () => {
     
     let hours = dateObj.getHours();
     const minutes = String(dateObj.getMinutes()).padStart(2, '0');
-    const seconds = String(dateObj.getSeconds()).padStart(2, '0');
     const ampm = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12;
-    hours = hours ? hours : 12; // supports 12 instead of 0
+    hours = hours ? hours : 12;
     const formattedHours = String(hours).padStart(2, '0');
 
     return `${day}-${month}-${year} ${formattedHours}:${minutes} ${ampm}`;
@@ -254,6 +279,23 @@ const IssueEntry: React.FC = () => {
     }
   };
 
+  const handleReset = () => {
+    setFormData(prev => ({
+      ...prev,
+      client_name: '',
+      issue_type: '',
+      clickup_ticket_id: '',
+      issue_details: '',
+      response_time: '',
+      resolution_time: '',
+      client_reporting_time: '',
+      issue_resolved_confirmed: '',
+      customer_satisfaction: '',
+      feedback_date: '',
+    }));
+    setError(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -262,7 +304,13 @@ const IssueEntry: React.FC = () => {
 
     // Simple validation
     if (!formData.client_name || !formData.issue_details || !formData.issue_type || !formData.category || !formData.priority || !formData.assigned_person || !formData.issue_date) {
-      setError('Please fill in all required fields.');
+      setError('Please fill in all required fields (marked with *).');
+      setIsLoading(false);
+      return;
+    }
+
+    if (isSystemBug(formData.issue_type) && !formData.clickup_ticket_id.trim()) {
+      setError('ClickUp Ticket ID is mandatory when Issue Type is System Bugs.');
       setIsLoading(false);
       return;
     }
@@ -288,18 +336,17 @@ const IssueEntry: React.FC = () => {
         console.error('Supabase Save Error:', sbError);
         setError(`Supabase Error: ${sbError.message || 'Failed to save to database'}`);
         setIsLoading(false);
-        return; // Stop if Supabase fails
+        return;
       }
 
       // 2. Save to Google Sheets directly from frontend
       if (supabaseSuccess) {
         try {
-          // UPDATE THIS URL AFTER NEW DEPLOYMENT
           const googleSheetUrl = 'https://script.google.com/macros/s/AKfycbxqevYmFg3mzpHh8yUbR5yr-OB22ha4QEUbsVvN6caAVt4spoST9dLyoRq7KlZt7KZN/exec';
           
           await fetch(googleSheetUrl, {
             method: 'POST',
-            mode: 'no-cors', // Google Apps Script requires no-cors or handles it via redirect
+            mode: 'no-cors',
             headers: {
               'Content-Type': 'application/json',
             },
@@ -312,7 +359,7 @@ const IssueEntry: React.FC = () => {
         }
       }
 
-      // Update local knownClients immediately so subsequent entries suggest this client
+      // Update local knownClients immediately
       const clientTrimmed = formData.client_name.trim();
       if (clientTrimmed) {
         setKnownClients(prev => {
@@ -339,8 +386,12 @@ const IssueEntry: React.FC = () => {
         response_time: '',
         resolution_time: '',
         client_reporting_time: '',
+        issue_resolved_confirmed: '',
+        customer_satisfaction: '',
+        feedback_date: '',
       }));
-      setTimeout(() => setSuccess(false), 3000);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => setSuccess(false), 4000);
     } catch (err: any) {
       setError(`Error: ${err.message || 'An unexpected error occurred'}`);
     } finally {
@@ -348,347 +399,590 @@ const IssueEntry: React.FC = () => {
     }
   };
 
+  const isCurrentBug = isSystemBug(formData.issue_type);
+
   return (
-    <div className="max-w-xl mx-auto animate-in slide-in-from-bottom-4 duration-500">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg relative">
-        <div className="gradient-bg p-5 text-white rounded-t-2xl">
-          <h2 className="text-lg font-bold">New Issue Report</h2>
-          <p className="opacity-80 text-[11px] mt-0.5">Submit a detailed report to help our team investigate.</p>
+    <div className="w-full space-y-6 animate-in fade-in duration-300">
+      {/* Status Alerts */}
+      {error && (
+        <div className="flex items-center gap-3 p-4 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 rounded-xl shadow-xs text-xs font-medium animate-in slide-in-from-top-2">
+          <AlertCircle size={18} className="shrink-0 text-rose-500" />
+          <div className="flex-1">{error}</div>
+          <button 
+            type="button" 
+            onClick={() => setError(null)} 
+            className="text-rose-500 hover:text-rose-700 text-xs font-bold"
+          >
+            ✕
+          </button>
         </div>
+      )}
 
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
-          {error && (
-            <div className="flex items-center gap-2 p-3 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-lg border border-rose-100 dark:border-rose-800 text-[11px]">
-              <AlertCircle size={14} />
-              {error}
-            </div>
-          )}
+      {success && (
+        <div className="flex items-center gap-3 p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 text-emerald-800 dark:text-emerald-300 rounded-xl shadow-xs text-xs font-medium animate-in slide-in-from-top-2">
+          <CheckCircle2 size={18} className="shrink-0 text-emerald-600 dark:text-emerald-400" />
+          <div className="flex-1">
+            <strong>Success!</strong> Issue ticket submitted and synced with database and reporting sheets.
+          </div>
+          <Link 
+            to="/issue-reports" 
+            className="underline font-bold text-emerald-700 dark:text-emerald-300 hover:opacity-80"
+          >
+            Open Reports →
+          </Link>
+        </div>
+      )}
 
-          {success && (
-            <div className="flex items-center gap-2 p-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-lg border border-emerald-100 dark:border-emerald-800 text-[11px]">
-              <CheckCircle size={14} />
-              Issue submitted successfully!
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div ref={clientContainerRef} className="space-y-1.5 relative">
-              <div className="flex items-center justify-between">
-                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Client Name *
-                </label>
-                {knownClients.length > 0 && (
-                  <span className="text-[10px] text-slate-400 dark:text-slate-500 flex items-center gap-1 font-medium">
-                    <Building2 size={10} className="text-indigo-500" />
-                    {knownClients.length} clients
-                  </span>
-                )}
-              </div>
-              <div className="relative">
-                <input 
-                  ref={clientInputRef}
-                  type="text"
-                  value={formData.client_name}
-                  onChange={(e) => {
-                    setFormData({ ...formData, client_name: e.target.value });
-                    setShowClientSuggestions(true);
-                    setHighlightedClientIndex(-1);
-                  }}
-                  onFocus={() => {
-                    if (formData.client_name.trim().length > 0) {
-                      setShowClientSuggestions(true);
-                    }
-                  }}
-                  onKeyDown={handleClientKeyDown}
-                  placeholder="e.g. Acme Corp"
-                  autoComplete="off"
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white text-xs"
-                />
-
-                {/* Suggestions Dropdown */}
-                {showClientSuggestions && filteredClientSuggestions.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl overflow-hidden z-50 animate-in fade-in-50 zoom-in-95 duration-150">
-                    <div className="px-3 py-1.5 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                      <span className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 font-semibold">
-                        <Sparkles size={11} />
-                        Existing Clients ({filteredClientSuggestions.length})
-                      </span>
-                      <span className="text-[9px] text-slate-400 dark:text-slate-500">↑↓ select, ↵ pick</span>
-                    </div>
-                    <div className="max-h-56 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
-                      {filteredClientSuggestions.map((item, index) => {
-                        const isHighlighted = highlightedClientIndex === index;
-                        const query = formData.client_name.trim().toLowerCase();
-                        const idx = item.name.toLowerCase().indexOf(query);
-
-                        return (
-                          <button
-                            key={item.name}
-                            type="button"
-                            onClick={() => handleSelectClient(item.name)}
-                            onMouseEnter={() => setHighlightedClientIndex(index)}
-                            className={`w-full px-3 py-2 text-left flex items-center justify-between transition-colors ${
-                              isHighlighted
-                                ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-950 dark:text-indigo-100'
-                                : 'hover:bg-slate-50 dark:hover:bg-slate-800/70 text-slate-800 dark:text-slate-200'
-                            }`}
-                          >
-                            <div className="flex items-center gap-2 min-w-0 pr-2">
-                              <div className={`p-1 rounded-md shrink-0 ${isHighlighted ? 'bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`}>
-                                <Building2 size={12} />
-                              </div>
-                              <span className="text-xs truncate font-medium">
-                                {idx >= 0 ? (
-                                  <>
-                                    {item.name.substring(0, idx)}
-                                    <span className="font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-0.5 rounded">
-                                      {item.name.substring(idx, idx + query.length)}
-                                    </span>
-                                    {item.name.substring(idx + query.length)}
-                                  </>
-                                ) : (
-                                  item.name
-                                )}
-                              </span>
-                            </div>
-                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 shrink-0 font-medium">
-                              {item.count} {item.count === 1 ? 'issue' : 'issues'}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Issue Type *</label>
-              <select 
-                value={formData.issue_type}
-                onChange={(e) => setFormData({...formData, issue_type: e.target.value})}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white text-xs"
-              >
-                <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Select Type</option>
-                <option value="System Bugs" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">System Bugs</option>
-                <option value="Device Issues" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Device Issues</option>
-                <option value="Awareness" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Awareness</option>
-                <option value="Help Requests" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Help Requests</option>
-              </select>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Category *</label>
-              <select 
-                value={formData.category}
-                onChange={(e) => setFormData({...formData, category: e.target.value})}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white text-xs"
-              >
-                <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Select Category</option>
-                {options.categories.map(c => <option key={c.id} value={c.name} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{c.name}</option>)}
-              </select>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Segment</label>
-              <select 
-                value={formData.segment}
-                onChange={(e) => setFormData({...formData, segment: e.target.value})}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white text-xs"
-              >
-                <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Select Segment</option>
-                {options.segments.map(s => <option key={s.id} value={s.name} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{s.name}</option>)}
-              </select>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">ClickUp Ticket ID</label>
-              <input 
-                type="text"
-                value={formData.clickup_ticket_id}
-                onChange={(e) => setFormData({...formData, clickup_ticket_id: e.target.value})}
-                placeholder="e.g. #8678xyz"
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white text-xs"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Priority *</label>
-              <select 
-                value={formData.priority}
-                onChange={(e) => setFormData({...formData, priority: e.target.value})}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white text-xs"
-              >
-                {options.priorities.map(p => <option key={p.id} value={p.name} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{p.name}</option>)}
-              </select>
-            </div>
-
-            <div className="space-y-1.5 md:col-span-2 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200/60 dark:border-slate-700/50">
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Ticket Create Time *
-                </span>
+      {/* Main Full-Page Form */}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          {/* LEFT COLUMN: Ticket Identity & Categorization (7 Cols) */}
+          <div className="lg:col-span-7 space-y-6">
+            
+            {/* Card 1: Client & Categorization */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-6 space-y-5">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500">
-                    {useLiveTime ? 'Live System Time' : 'Manual Entry'}
+                  <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                    <Building2 size={18} />
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+                      Client & Classification
+                    </h2>
+                    <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                      Identify customer and categorize the nature of the issue
+                    </p>
+                  </div>
+                </div>
+                {knownClients.length > 0 && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+                    <Sparkles size={12} className="text-indigo-500" />
+                    {knownClients.length} Existing Clients
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => setUseLiveTime(!useLiveTime)}
-                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${useLiveTime ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-700'}`}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${useLiveTime ? 'translate-x-4' : 'translate-x-0'}`}
-                    />
-                  </button>
+                )}
+              </div>
+
+              {/* Client Name Input with Autocomplete */}
+              <div ref={clientContainerRef} className="space-y-1.5 relative">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1">
+                    Client Name <span className="text-rose-500">*</span>
+                  </label>
+                  <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                    Type to search previous clients
+                  </span>
+                </div>
+                <div className="relative">
+                  <input 
+                    ref={clientInputRef}
+                    type="text"
+                    value={formData.client_name}
+                    onChange={(e) => {
+                      setFormData({ ...formData, client_name: e.target.value });
+                      setShowClientSuggestions(true);
+                      setHighlightedClientIndex(-1);
+                    }}
+                    onFocus={() => {
+                      if (formData.client_name.trim().length > 0) {
+                        setShowClientSuggestions(true);
+                      }
+                    }}
+                    onKeyDown={handleClientKeyDown}
+                    placeholder="e.g. Acme Corporation / Rahim Steel / Star Logistics"
+                    autoComplete="off"
+                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-900 outline-none transition-all text-slate-900 dark:text-white text-sm"
+                  />
+
+                  {/* Suggestions Dropdown */}
+                  {showClientSuggestions && filteredClientSuggestions.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl overflow-hidden z-50 animate-in fade-in-50 zoom-in-95 duration-150">
+                      <div className="px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                        <span className="flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400 font-bold">
+                          <Sparkles size={13} />
+                          Matching Clients ({filteredClientSuggestions.length})
+                        </span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500">↑↓ to navigate, ↵ to pick</span>
+                      </div>
+                      <div className="max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
+                        {filteredClientSuggestions.map((item, index) => {
+                          const isHighlighted = highlightedClientIndex === index;
+                          const query = formData.client_name.trim().toLowerCase();
+                          const idx = item.name.toLowerCase().indexOf(query);
+
+                          return (
+                            <button
+                              key={item.name}
+                              type="button"
+                              onClick={() => handleSelectClient(item.name)}
+                              onMouseEnter={() => setHighlightedClientIndex(index)}
+                              className={`w-full px-4 py-2.5 text-left flex items-center justify-between transition-colors ${
+                                isHighlighted
+                                  ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-950 dark:text-indigo-100'
+                                  : 'hover:bg-slate-50 dark:hover:bg-slate-800/70 text-slate-800 dark:text-slate-200'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                                <div className={`p-1.5 rounded-lg shrink-0 ${isHighlighted ? 'bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`}>
+                                  <Building2 size={14} />
+                                </div>
+                                <span className="text-sm truncate font-medium">
+                                  {idx >= 0 ? (
+                                    <>
+                                      {item.name.substring(0, idx)}
+                                      <span className="font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1 rounded">
+                                        {item.name.substring(idx, idx + query.length)}
+                                      </span>
+                                      {item.name.substring(idx + query.length)}
+                                    </>
+                                  ) : (
+                                    item.name
+                                  )}
+                                </span>
+                              </div>
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 shrink-0 font-semibold">
+                                {item.count} {item.count === 1 ? 'issue' : 'issues'}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {useLiveTime ? (
-                <div className="flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2 px-3 shadow-inner">
-                  <div className="flex items-center gap-2">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                    </span>
-                    <span className="text-xs font-mono font-bold text-slate-800 dark:text-slate-200">
-                      {formatDate12h(formData.issue_date)}
-                    </span>
-                  </div>
-                  <span className="text-[9px] font-bold uppercase py-0.5 px-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40 rounded-md">
-                    Running
-                  </span>
+              {/* Classification Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Issue Type */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1">
+                    Issue Type <span className="text-rose-500">*</span>
+                  </label>
+                  <select 
+                    value={formData.issue_type}
+                    onChange={(e) => setFormData({...formData, issue_type: e.target.value})}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-900 outline-none transition-all text-slate-900 dark:text-white text-sm"
+                  >
+                    <option value="" className="bg-white dark:bg-slate-900">Select Issue Type</option>
+                    <option value="System Bugs" className="bg-white dark:bg-slate-900">System Bugs</option>
+                    <option value="Device Issues" className="bg-white dark:bg-slate-900">Device Issues</option>
+                    <option value="Awareness" className="bg-white dark:bg-slate-900">Awareness</option>
+                    <option value="Help Requests" className="bg-white dark:bg-slate-900">Help Requests</option>
+                  </select>
                 </div>
-              ) : (
-                <div className="space-y-2">
-                  <div className="grid grid-cols-2 gap-2">
+
+                {/* Category */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1">
+                    Category <span className="text-rose-500">*</span>
+                  </label>
+                  <select 
+                    value={formData.category}
+                    onChange={(e) => setFormData({...formData, category: e.target.value})}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-900 outline-none transition-all text-slate-900 dark:text-white text-sm"
+                  >
+                    <option value="" className="bg-white dark:bg-slate-900">Select Category</option>
+                    {options.categories.map(c => (
+                      <option key={c.id} value={c.name} className="bg-white dark:bg-slate-900">
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Segment */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    Segment
+                  </label>
+                  <select 
+                    value={formData.segment}
+                    onChange={(e) => setFormData({...formData, segment: e.target.value})}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-900 outline-none transition-all text-slate-900 dark:text-white text-sm"
+                  >
+                    <option value="" className="bg-white dark:bg-slate-900">Select Segment</option>
+                    {options.segments.map(s => (
+                      <option key={s.id} value={s.name} className="bg-white dark:bg-slate-900">
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* ClickUp Ticket ID */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1">
+                      ClickUp Ticket ID {isCurrentBug && <span className="text-rose-500">*</span>}
+                    </label>
+                    {isCurrentBug ? (
+                      <span className="text-[10px] font-bold text-rose-600 bg-rose-50 dark:bg-rose-950/60 dark:text-rose-400 px-2 py-0.5 rounded-md border border-rose-200 dark:border-rose-900/60">
+                        Mandatory for Bugs
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-slate-400">Optional</span>
+                    )}
+                  </div>
+                  <input 
+                    type="text"
+                    value={formData.clickup_ticket_id}
+                    onChange={(e) => setFormData({...formData, clickup_ticket_id: e.target.value})}
+                    placeholder={isCurrentBug ? "e.g. #8678xyz (Required for System Bugs)" : "e.g. #8678xyz"}
+                    className={`w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/70 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-900 outline-none transition-all text-slate-900 dark:text-white text-sm ${
+                      isCurrentBug && !formData.clickup_ticket_id.trim()
+                        ? 'border-amber-400 dark:border-amber-600 bg-amber-50/30 dark:bg-amber-950/20'
+                        : 'border-slate-200 dark:border-slate-700'
+                    }`}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: System Bug Resolution & Feedback (Shown & Highlighted When System Bugs Selected) */}
+            {isCurrentBug && (
+              <div className="bg-gradient-to-br from-indigo-50/70 via-white to-purple-50/50 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/30 rounded-2xl border-2 border-indigo-200/80 dark:border-indigo-800/60 shadow-md p-6 animate-in fade-in slide-in-from-top-3 duration-300">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {/* 1. Issue Resolved Confirmed */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1">
+                      Resolved Confirmed
+                    </label>
+                    <select 
+                      value={formData.issue_resolved_confirmed}
+                      onChange={(e) => setFormData({...formData, issue_resolved_confirmed: e.target.value})}
+                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-indigo-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white text-sm"
+                    >
+                      <option value="" className="bg-white dark:bg-slate-900">Select Response</option>
+                      <option value="Yes" className="bg-white dark:bg-slate-900">Yes</option>
+                      <option value="No" className="bg-white dark:bg-slate-900">No</option>
+                      <option value="No Response" className="bg-white dark:bg-slate-900">No Response</option>
+                    </select>
+                  </div>
+
+                  {/* 2. Customer Satisfaction */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1">
+                      Customer Satisfaction
+                    </label>
+                    <select 
+                      value={formData.customer_satisfaction}
+                      onChange={(e) => setFormData({...formData, customer_satisfaction: e.target.value})}
+                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-indigo-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white text-sm"
+                    >
+                      <option value="" className="bg-white dark:bg-slate-900">Select Satisfaction</option>
+                      <option value="Satisfied" className="bg-white dark:bg-slate-900 text-emerald-600 font-semibold">Satisfied</option>
+                      <option value="Neutral" className="bg-white dark:bg-slate-900 text-amber-600 font-semibold">Neutral</option>
+                      <option value="Dissatisfied" className="bg-white dark:bg-slate-900 text-rose-600 font-semibold">Dissatisfied</option>
+                    </select>
+                  </div>
+
+                  {/* 3. Feedback Date */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1">
+                      Feedback Date
+                    </label>
                     <input 
                       type="date"
-                      value={manualDate}
-                      onChange={(e) => {
-                        setManualDate(e.target.value);
-                      }}
-                      className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs font-medium"
+                      value={formData.feedback_date}
+                      onChange={(e) => setFormData({...formData, feedback_date: e.target.value})}
+                      className="w-full px-3.5 py-2 bg-white dark:bg-slate-800 border border-indigo-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white text-sm"
                     />
-                    <input 
-                      type="time"
-                      value={manualTime}
-                      onChange={(e) => {
-                        setManualTime(e.target.value);
-                      }}
-                      className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs font-medium"
-                    />
-                  </div>
-                  <div className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 p-1.5 px-2.5 rounded-md border border-indigo-100/50 dark:border-indigo-900/30 font-mono">
-                    Selected (12h format): {formatDate12h(formData.issue_date)}
                   </div>
                 </div>
-              )}
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Assigned To *</label>
-              <select 
-                value={formData.assigned_person}
-                onChange={(e) => setFormData({...formData, assigned_person: e.target.value})}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white text-xs"
-              >
-                {options.assignedPersons.map(p => <option key={p.id} value={p.name} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{p.name}</option>)}
-              </select>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status *</label>
-              <select 
-                value={formData.status}
-                onChange={(e) => setFormData({...formData, status: e.target.value})}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white text-xs"
-              >
-                {options.statuses.map(s => <option key={s.id} value={s.name} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{s.name}</option>)}
-              </select>
-            </div>
-
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Client Reporting Time</label>
-                <button
-                  type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, client_reporting_time: getCurrentTime12h() }))}
-                  className="text-[10px] text-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold transition-colors"
-                >
-                  Set Now
-                </button>
               </div>
-              <input 
-                type="time"
-                value={convert12hTo24h(formData.client_reporting_time)}
-                onChange={(e) => setFormData({...formData, client_reporting_time: convert24hTo12h(e.target.value)})}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white text-xs"
-              />
+            )}
+
+            {/* Card 3: Issue Details */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-6 space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                    <FileText size={18} />
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+                      Issue Description & Findings
+                    </h2>
+                    <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                      Detailed diagnostic notes, customer conversation summary, or bug behavior
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1">
+                  Issue Details <span className="text-rose-500">*</span>
+                </label>
+                <textarea 
+                  rows={5}
+                  value={formData.issue_details}
+                  onChange={(e) => setFormData({...formData, issue_details: e.target.value})}
+                  placeholder="Provide a clear and thorough description of the issue, error codes, steps to reproduce, or instructions given to the customer..."
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-900 outline-none transition-all text-slate-900 dark:text-white text-sm leading-relaxed"
+                />
+              </div>
             </div>
 
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Response Time</label>
-                <button
-                  type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, response_time: getCurrentTime12h() }))}
-                  className="text-[10px] text-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold transition-colors"
-                >
-                  Set Now
-                </button>
-              </div>
-              <input 
-                type="time"
-                value={convert12hTo24h(formData.response_time)}
-                onChange={(e) => setFormData({...formData, response_time: convert24hTo12h(e.target.value)})}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white text-xs"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Resolution Time</label>
-                <button
-                  type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, resolution_time: getCurrentTime12h() }))}
-                  className="text-[10px] text-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold transition-colors"
-                >
-                  Set Now
-                </button>
-              </div>
-              <input 
-                type="time"
-                value={convert12hTo24h(formData.resolution_time)}
-                onChange={(e) => setFormData({...formData, resolution_time: convert24hTo12h(e.target.value)})}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white text-xs"
-              />
-            </div>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Issue Details *</label>
-            <textarea 
-              rows={3}
-              value={formData.issue_details}
-              onChange={(e) => setFormData({...formData, issue_details: e.target.value})}
-              placeholder="Provide a thorough description of the issue..."
-              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white resize-none text-xs"
-            />
+          {/* RIGHT COLUMN: Assignment, Priority, Timing & SLA (5 Cols) */}
+          <div className="lg:col-span-5 space-y-6">
+
+            {/* Card 4: Assignment & Priority */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-6 space-y-5">
+              <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                  <User size={18} />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+                    Ownership & Status
+                  </h2>
+                  <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                    Assign responsible agent and define urgency
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {/* Priority */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1">
+                    Priority <span className="text-rose-500">*</span>
+                  </label>
+                  <select 
+                    value={formData.priority}
+                    onChange={(e) => setFormData({...formData, priority: e.target.value})}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-900 outline-none transition-all text-slate-900 dark:text-white text-sm"
+                  >
+                    {options.priorities.map(p => (
+                      <option key={p.id} value={p.name} className="bg-white dark:bg-slate-900">
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Assigned Person */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1">
+                    Assigned To <span className="text-rose-500">*</span>
+                  </label>
+                  <select 
+                    value={formData.assigned_person}
+                    onChange={(e) => setFormData({...formData, assigned_person: e.target.value})}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-900 outline-none transition-all text-slate-900 dark:text-white text-sm"
+                  >
+                    {options.assignedPersons.map(p => (
+                      <option key={p.id} value={p.name} className="bg-white dark:bg-slate-900">
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Status */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1">
+                    Status <span className="text-rose-500">*</span>
+                  </label>
+                  <select 
+                    value={formData.status}
+                    onChange={(e) => setFormData({...formData, status: e.target.value})}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-900 outline-none transition-all text-slate-900 dark:text-white text-sm"
+                  >
+                    {options.statuses.map(s => (
+                      <option key={s.id} value={s.name} className="bg-white dark:bg-slate-900">
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 5: Timing & SLA Benchmarks */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-6 space-y-5">
+              <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                  <Clock size={18} />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+                    Timing & SLA Metrics
+                  </h2>
+                  <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                    Record incident timestamps and service resolution milestones
+                  </p>
+                </div>
+              </div>
+
+              {/* Ticket Creation Time Card */}
+              <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200/70 dark:border-slate-700/60 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    Ticket Create Time <span className="text-rose-500">*</span>
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                      {useLiveTime ? 'Live System Clock' : 'Manual Entry'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setUseLiveTime(!useLiveTime)}
+                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${useLiveTime ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-700'}`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${useLiveTime ? 'translate-x-4' : 'translate-x-0'}`}
+                      />
+                    </button>
+                  </div>
+                </div>
+
+                {useLiveTime ? (
+                  <div className="flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 px-3 shadow-inner">
+                    <div className="flex items-center gap-2.5">
+                      <span className="relative flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                      </span>
+                      <span className="text-xs font-mono font-bold text-slate-800 dark:text-slate-200">
+                        {formatDate12h(formData.issue_date)}
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-bold uppercase py-0.5 px-2 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40 rounded-md">
+                      Live
+                    </span>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <input 
+                        type="date"
+                        value={manualDate}
+                        onChange={(e) => setManualDate(e.target.value)}
+                        className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs font-medium"
+                      />
+                      <input 
+                        type="time"
+                        value={manualTime}
+                        onChange={(e) => setManualTime(e.target.value)}
+                        className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-xs font-medium"
+                      />
+                    </div>
+                    <div className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 p-2 rounded-lg border border-indigo-100/60 dark:border-indigo-900/40 font-mono">
+                      Selected: {formatDate12h(formData.issue_date)}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Three SLA Time Fields */}
+              <div className="space-y-3 pt-1">
+                {/* Client Reporting Time */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      Client Reporting Time
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, client_reporting_time: getCurrentTime12h() }))}
+                      className="text-xs text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-bold transition-colors cursor-pointer"
+                    >
+                      Set Now ({getCurrentTime12h()})
+                    </button>
+                  </div>
+                  <input 
+                    type="time"
+                    value={convert12hTo24h(formData.client_reporting_time)}
+                    onChange={(e) => setFormData({...formData, client_reporting_time: convert24hTo12h(e.target.value)})}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-900 outline-none transition-all text-slate-900 dark:text-white text-sm"
+                  />
+                </div>
+
+                {/* Response Time */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      Response Time
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, response_time: getCurrentTime12h() }))}
+                      className="text-xs text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-bold transition-colors cursor-pointer"
+                    >
+                      Set Now ({getCurrentTime12h()})
+                    </button>
+                  </div>
+                  <input 
+                    type="time"
+                    value={convert12hTo24h(formData.response_time)}
+                    onChange={(e) => setFormData({...formData, response_time: convert24hTo12h(e.target.value)})}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-900 outline-none transition-all text-slate-900 dark:text-white text-sm"
+                  />
+                </div>
+
+                {/* Resolution Time */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      Resolution Time
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, resolution_time: getCurrentTime12h() }))}
+                      className="text-xs text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-bold transition-colors cursor-pointer"
+                    >
+                      Set Now ({getCurrentTime12h()})
+                    </button>
+                  </div>
+                  <input 
+                    type="time"
+                    value={convert12hTo24h(formData.resolution_time)}
+                    onChange={(e) => setFormData({...formData, resolution_time: convert24hTo12h(e.target.value)})}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-900 outline-none transition-all text-slate-900 dark:text-white text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+
           </div>
 
+        </div>
+
+        {/* Full-Width Form Submit Bar */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex items-center justify-end gap-3">
+          <button
+            type="button"
+            onClick={handleReset}
+            disabled={isLoading}
+            className="px-5 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all shadow-xs cursor-pointer disabled:opacity-50"
+          >
+            Reset
+          </button>
           <button 
             type="submit"
             disabled={isLoading}
-            className="w-full py-2.5 gradient-bg text-white font-bold rounded-lg shadow-md hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-xs"
+            className="inline-flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/25 active:scale-[0.99] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : 'Submit Issue Report'}
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span>Submitting Ticket...</span>
+              </>
+            ) : (
+              <>
+                <Send size={15} />
+                <span>Submit Issue Report</span>
+              </>
+            )}
           </button>
-        </form>
-      </div>
+        </div>
+      </form>
     </div>
   );
 };

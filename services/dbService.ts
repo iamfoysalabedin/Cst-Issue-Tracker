@@ -65,9 +65,12 @@ export function parseIssueVirtualFields(issue: any): any {
   let response_time = issue.response_time || '';
   let resolution_time = issue.resolution_time || '';
   let client_reporting_time = issue.client_reporting_time || '';
+  let issue_resolved_confirmed = issue.issue_resolved_confirmed || '';
+  let customer_satisfaction = issue.customer_satisfaction || '';
+  let feedback_date = issue.feedback_date || '';
 
   // Fallback to metadata tag format if the actual columns are empty
-  if (!response_time || !resolution_time || !client_reporting_time) {
+  if (!response_time || !resolution_time || !client_reporting_time || !issue_resolved_confirmed || !customer_satisfaction || !feedback_date) {
     const tagRegex = /\[Metadata: [^\]]*\]/;
     const match = details.match(tagRegex);
     if (match) {
@@ -82,6 +85,15 @@ export function parseIssueVirtualFields(issue: any): any {
       const crMatch = tagContent.match(/ClientReportingTime="([^"]*)"/);
       if (crMatch && !client_reporting_time) client_reporting_time = crMatch[1];
 
+      const ircMatch = tagContent.match(/IssueResolvedConfirmed="([^"]*)"/);
+      if (ircMatch && !issue_resolved_confirmed) issue_resolved_confirmed = ircMatch[1];
+
+      const csMatch = tagContent.match(/CustomerSatisfaction="([^"]*)"/);
+      if (csMatch && !customer_satisfaction) customer_satisfaction = csMatch[1];
+
+      const fdMatch = tagContent.match(/FeedbackDate="([^"]*)"/);
+      if (fdMatch && !feedback_date) feedback_date = fdMatch[1];
+
       details = details.replace(tagRegex, '').trim();
     }
   }
@@ -93,7 +105,10 @@ export function parseIssueVirtualFields(issue: any): any {
     issue_details: details,
     response_time: response_time || '',
     resolution_time: resolution_time || '',
-    client_reporting_time: client_reporting_time || ''
+    client_reporting_time: client_reporting_time || '',
+    issue_resolved_confirmed: issue_resolved_confirmed || '',
+    customer_satisfaction: customer_satisfaction || '',
+    feedback_date: feedback_date || ''
   };
 }
 
@@ -282,10 +297,49 @@ export const dbService = {
   async saveIssue(issue: Omit<Issue, 'id' | 'created_at' | 'updated_at'> & { created_at?: string }): Promise<Issue> {
     const serialized = serializeIssueVirtualFields(issue);
     console.log('Attempting to save issue to Supabase:', serialized);
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('issues')
       .insert([serialized])
       .select();
+    
+    // Fallback if newly added columns do not exist in the remote Supabase schema
+    if (error && (
+      error.message?.includes('column') || 
+      error.message?.includes('schema cache') || 
+      error.code === 'PGRST204' || 
+      error.code === '42703'
+    )) {
+      console.warn('Column issue in Supabase, using metadata fallback:', error.message);
+      const metaParts: string[] = [];
+      if (issue.response_time) metaParts.push(`ResponseTime="${issue.response_time}"`);
+      if (issue.resolution_time) metaParts.push(`ResolutionTime="${issue.resolution_time}"`);
+      if (issue.client_reporting_time) metaParts.push(`ClientReportingTime="${issue.client_reporting_time}"`);
+      if (issue.issue_resolved_confirmed) metaParts.push(`IssueResolvedConfirmed="${issue.issue_resolved_confirmed}"`);
+      if (issue.customer_satisfaction) metaParts.push(`CustomerSatisfaction="${issue.customer_satisfaction}"`);
+      if (issue.feedback_date) metaParts.push(`FeedbackDate="${issue.feedback_date}"`);
+
+      let cleanDetails = (issue.issue_details || '').replace(/\[Metadata: [^\]]*\]/, '').trim();
+      if (metaParts.length > 0) {
+        cleanDetails = `${cleanDetails} [Metadata: ${metaParts.join(' ')}]`;
+      }
+
+      const fallbackPayload: any = { ...serialized, issue_details: cleanDetails };
+      delete fallbackPayload.issue_resolved_confirmed;
+      delete fallbackPayload.customer_satisfaction;
+      delete fallbackPayload.feedback_date;
+
+      const retryRes = await supabase
+        .from('issues')
+        .insert([fallbackPayload])
+        .select();
+
+      if (!retryRes.error && retryRes.data && retryRes.data.length > 0) {
+        data = retryRes.data;
+        error = null;
+      } else if (retryRes.error) {
+        error = retryRes.error;
+      }
+    }
     
     if (error) {
       console.error('Supabase Insert Error:', error);
@@ -318,13 +372,52 @@ export const dbService = {
       updated_at: new Date().toISOString()
     };
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('issues')
       .update(finalUpdates)
       .eq('id', id)
       .select()
       .single();
     
+    // Fallback if newly added columns do not exist in the remote Supabase schema
+    if (error && (
+      error.message?.includes('column') || 
+      error.message?.includes('schema cache') || 
+      error.code === 'PGRST204' || 
+      error.code === '42703'
+    )) {
+      console.warn('Column issue during update in Supabase, using metadata fallback:', error.message);
+      const metaParts: string[] = [];
+      if (updates.response_time !== undefined) metaParts.push(`ResponseTime="${updates.response_time}"`);
+      if (updates.resolution_time !== undefined) metaParts.push(`ResolutionTime="${updates.resolution_time}"`);
+      if (updates.client_reporting_time !== undefined) metaParts.push(`ClientReportingTime="${updates.client_reporting_time}"`);
+      if (updates.issue_resolved_confirmed !== undefined) metaParts.push(`IssueResolvedConfirmed="${updates.issue_resolved_confirmed}"`);
+      if (updates.customer_satisfaction !== undefined) metaParts.push(`CustomerSatisfaction="${updates.customer_satisfaction}"`);
+      if (updates.feedback_date !== undefined) metaParts.push(`FeedbackDate="${updates.feedback_date}"`);
+
+      let cleanDetails = ((updates.issue_details || '') as string).replace(/\[Metadata: [^\]]*\]/, '').trim();
+      if (metaParts.length > 0) {
+        cleanDetails = `${cleanDetails} [Metadata: ${metaParts.join(' ')}]`;
+      }
+
+      const fallbackUpdates: any = { ...finalUpdates, issue_details: cleanDetails };
+      delete fallbackUpdates.issue_resolved_confirmed;
+      delete fallbackUpdates.customer_satisfaction;
+      delete fallbackUpdates.feedback_date;
+
+      const retryRes = await supabase
+        .from('issues')
+        .update(fallbackUpdates)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (!retryRes.error && retryRes.data) {
+        data = retryRes.data;
+        error = null;
+      }
+    }
+
     if (error) throw error;
     return parseIssueVirtualFields(data) as Issue;
   },

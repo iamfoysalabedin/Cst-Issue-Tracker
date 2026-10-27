@@ -35,6 +35,11 @@ const convert12hTo24h = (time12: string): string => {
   return `${String(hours).padStart(2, '0')}:${minutes}`;
 };
 
+const isSystemBug = (type?: string): boolean => {
+  if (!type) return false;
+  return type.toLowerCase().includes('bug');
+};
+
 const IssueReports: React.FC = () => {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [search, setSearch] = useState('');
@@ -251,6 +256,9 @@ const IssueReports: React.FC = () => {
           response_time: row['Response Time'] || row['response_time'] || '',
           resolution_time: row['Resolution Time'] || row['resolution_time'] || '',
           client_reporting_time: row['Client Reporting Time'] || row['client_reporting_time'] || '',
+          issue_resolved_confirmed: row['Issue Resolved Confirmed'] || row['issue_resolved_confirmed'] || '',
+          customer_satisfaction: row['Customer Satisfaction'] || row['customer_satisfaction'] || '',
+          feedback_date: row['Feedback Date'] || row['feedback_date'] || '',
         }));
 
         for (const issue of newIssues) {
@@ -286,7 +294,10 @@ const IssueReports: React.FC = () => {
         'Issue Date': formattedDate,
         'Response Time': '10:30 AM',
         'Resolution Time': '11:45 AM',
-        'Client Reporting Time': '10:15 AM'
+        'Client Reporting Time': '10:15 AM',
+        'Issue Resolved Confirmed': 'Yes',
+        'Customer Satisfaction': 'Satisfied',
+        'Feedback Date': formattedDate
       }
     ];
     const ws = XLSX.utils.json_to_sheet(sampleData);
@@ -298,6 +309,10 @@ const IssueReports: React.FC = () => {
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingIssue) {
+      if (isSystemBug(editingIssue.issue_type) && !editingIssue.clickup_ticket_id?.trim()) {
+        alert('ClickUp Ticket ID is mandatory when Issue Type is System Bugs.');
+        return;
+      }
       await dbService.updateIssue(editingIssue.id, editingIssue);
       setEditingIssue(null);
       loadIssues();
@@ -318,7 +333,9 @@ const IssueReports: React.FC = () => {
     const matchesSearch = issue.client_name.toLowerCase().includes(search.toLowerCase()) || 
                           issue.issue_details.toLowerCase().includes(search.toLowerCase()) ||
                           (issue.segment && issue.segment.toLowerCase().includes(search.toLowerCase())) ||
-                          (issue.clickup_ticket_id && issue.clickup_ticket_id.toLowerCase().includes(search.toLowerCase()));
+                          (issue.clickup_ticket_id && issue.clickup_ticket_id.toLowerCase().includes(search.toLowerCase())) ||
+                          (issue.issue_resolved_confirmed && issue.issue_resolved_confirmed.toLowerCase().includes(search.toLowerCase())) ||
+                          (issue.customer_satisfaction && issue.customer_satisfaction.toLowerCase().includes(search.toLowerCase()));
     
     const issueDateStr = issue.issue_date || issue.created_at;
     const issueDateObj = new Date(issueDateStr);
@@ -359,6 +376,9 @@ const IssueReports: React.FC = () => {
       'Client Reporting Time',
       'Response Time',
       'Resolution Time',
+      'Issue Resolved Confirmed',
+      'Customer Satisfaction',
+      'Feedback Date',
       'System Log Time'
     ];
 
@@ -377,6 +397,9 @@ const IssueReports: React.FC = () => {
       i.client_reporting_time || '',
       i.response_time || '',
       i.resolution_time || '',
+      i.issue_resolved_confirmed || '',
+      i.customer_satisfaction || '',
+      i.feedback_date || '',
       i.created_at ? new Date(i.created_at).toLocaleString() : ''
     ]);
 
@@ -399,6 +422,9 @@ const IssueReports: React.FC = () => {
       { wch: 22 },  // Client Reporting Time
       { wch: 18 },  // Response Time
       { wch: 18 },  // Resolution Time
+      { wch: 24 },  // Issue Resolved Confirmed
+      { wch: 22 },  // Customer Satisfaction
+      { wch: 16 },  // Feedback Date
       { wch: 22 }   // System Log Time
     ];
     ws['!cols'] = wscols;
@@ -569,6 +595,9 @@ const IssueReports: React.FC = () => {
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Client Reporting Time</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Response Time</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Resolution Time</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Resolved Confirmed</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Satisfaction</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Feedback Date</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right whitespace-nowrap">Actions</th>
               </tr>
             </thead>
@@ -613,6 +642,39 @@ const IssueReports: React.FC = () => {
                   <td className="px-4 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">{issue.client_reporting_time || '-'}</td>
                   <td className="px-4 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">{issue.response_time || '-'}</td>
                   <td className="px-4 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">{issue.resolution_time || '-'}</td>
+                  <td className="px-4 py-2.5 whitespace-nowrap">
+                    {issue.issue_resolved_confirmed ? (
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border inline-block whitespace-nowrap ${
+                        issue.issue_resolved_confirmed === 'Yes'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800'
+                          : issue.issue_resolved_confirmed === 'No'
+                          ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800'
+                          : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800'
+                      }`}>
+                        {issue.issue_resolved_confirmed}
+                      </span>
+                    ) : (
+                      <span className="text-slate-400 text-xs">-</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-2.5 whitespace-nowrap">
+                    {issue.customer_satisfaction ? (
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border inline-block whitespace-nowrap ${
+                        issue.customer_satisfaction === 'Satisfied'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800'
+                          : issue.customer_satisfaction === 'Neutral'
+                          ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800'
+                          : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800'
+                      }`}>
+                        {issue.customer_satisfaction}
+                      </span>
+                    ) : (
+                      <span className="text-slate-400 text-xs">-</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                    {issue.feedback_date || '-'}
+                  </td>
                   <td className="px-4 py-2.5 text-right flex-nowrap">
                     <div className="flex items-center justify-end gap-1.5">
                       <button 
@@ -632,7 +694,7 @@ const IssueReports: React.FC = () => {
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan={14} className="px-4 py-10 text-center text-slate-400 text-xs">
+                  <td colSpan={17} className="px-4 py-10 text-center text-slate-400 text-xs">
                     No issues found matching your criteria.
                   </td>
                 </tr>
@@ -725,13 +787,26 @@ const IssueReports: React.FC = () => {
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">ClickUp Ticket ID</label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      ClickUp Ticket ID {isSystemBug(editingIssue.issue_type) && <span className="text-rose-500">*</span>}
+                    </label>
+                    {isSystemBug(editingIssue.issue_type) && (
+                      <span className="text-[9px] font-semibold text-rose-500 bg-rose-50 dark:bg-rose-900/30 px-1.5 py-0.2 rounded border border-rose-200/50 dark:border-rose-800/40">
+                        Mandatory
+                      </span>
+                    )}
+                  </div>
                   <input 
                     type="text"
                     value={editingIssue.clickup_ticket_id || ''}
                     onChange={(e) => setEditingIssue({...editingIssue, clickup_ticket_id: e.target.value})}
-                    placeholder="e.g. #8678xyz"
-                    className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
+                    placeholder={isSystemBug(editingIssue.issue_type) ? "e.g. #8678xyz (Required)" : "e.g. #8678xyz"}
+                    className={`w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs ${
+                      isSystemBug(editingIssue.issue_type) && !editingIssue.clickup_ticket_id?.trim()
+                        ? 'border-amber-300 dark:border-amber-700/70 focus:border-indigo-500'
+                        : 'border-slate-200 dark:border-slate-700'
+                    }`}
                   />
                 </div>
                 <div className="space-y-1">
@@ -806,6 +881,65 @@ const IssueReports: React.FC = () => {
                     onChange={(e) => setEditingIssue({...editingIssue, resolution_time: convert24hTo12h(e.target.value)})}
                     className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
                   />
+                </div>
+
+                {/* Bug Resolution & Feedback Section */}
+                <div className="col-span-2 bg-indigo-50/40 dark:bg-indigo-950/20 p-3 rounded-xl border border-indigo-100 dark:border-indigo-900/40 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 inline-block"></span>
+                      Bug Resolution & Feedback (Optional)
+                    </span>
+                    <span className="text-[9px] text-slate-400 dark:text-slate-500">
+                      {isSystemBug(editingIssue.issue_type) ? 'System Bug Feedback' : 'Optional Feedback'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                        Issue Resolved Confirmed
+                      </label>
+                      <select 
+                        value={editingIssue.issue_resolved_confirmed || ''}
+                        onChange={(e) => setEditingIssue({...editingIssue, issue_resolved_confirmed: e.target.value})}
+                        className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
+                      >
+                        <option value="">Select Response</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                        <option value="No Response">No Response</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                        Customer Satisfaction
+                      </label>
+                      <select 
+                        value={editingIssue.customer_satisfaction || ''}
+                        onChange={(e) => setEditingIssue({...editingIssue, customer_satisfaction: e.target.value})}
+                        className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
+                      >
+                        <option value="">Select Satisfaction</option>
+                        <option value="Satisfied">Satisfied</option>
+                        <option value="Neutral">Neutral</option>
+                        <option value="Dissatisfied">Dissatisfied</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                        Feedback Date
+                      </label>
+                      <input 
+                        type="date"
+                        value={editingIssue.feedback_date || ''}
+                        onChange={(e) => setEditingIssue({...editingIssue, feedback_date: e.target.value})}
+                        className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
               <div className="space-y-1">
