@@ -26,6 +26,7 @@ import {
   CartesianGrid, 
   BarChart, 
   Bar, 
+  LabelList,
   PieChart, 
   Pie, 
   Cell, 
@@ -338,7 +339,7 @@ export const SalesDashboard: React.FC = () => {
           <div className="h-64 w-full">
             {metrics.salesByRep.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={metrics.salesByRep} layout="vertical" margin={{ left: 20 }}>
+                <BarChart data={metrics.salesByRep} layout="vertical" margin={{ left: 10, right: 85, top: 5, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#334155" opacity={0.15} />
                   <XAxis 
                     type="number" 
@@ -346,7 +347,7 @@ export const SalesDashboard: React.FC = () => {
                     fontSize={11} 
                     tickFormatter={(val) => `৳${(val / 1000).toFixed(0)}k`} 
                   />
-                  <YAxis type="category" dataKey="rep" stroke="#94a3b8" fontSize={11} width={100} />
+                  <YAxis type="category" dataKey="rep" stroke="#94a3b8" fontSize={11} width={85} />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: '#0f172a',
@@ -357,7 +358,14 @@ export const SalesDashboard: React.FC = () => {
                     }}
                     formatter={(val: any) => [`৳${Number(val).toLocaleString()}`, 'Closed Revenue']}
                   />
-                  <Bar dataKey="revenue" fill="#6366f1" radius={[0, 6, 6, 0]} />
+                  <Bar dataKey="revenue" fill="#6366f1" radius={[0, 6, 6, 0]}>
+                    <LabelList 
+                      dataKey="revenue" 
+                      position="right" 
+                      formatter={(val: any) => `৳${Number(val || 0).toLocaleString()}`} 
+                      className="text-[11px] font-bold fill-indigo-600 dark:fill-indigo-400"
+                    />
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -366,6 +374,47 @@ export const SalesDashboard: React.FC = () => {
               </div>
             )}
           </div>
+
+          {/* Detailed Sales Representative Revenue List */}
+          {metrics.salesByRep.length > 0 && (
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
+              <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                <span>Sales Representative</span>
+                <span>Sold Amount (BDT)</span>
+              </div>
+              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                {metrics.salesByRep.map((item, idx) => {
+                  const totalRev = metrics.totalRevenue || 1;
+                  const pct = Math.round((item.revenue / totalRev) * 100);
+                  return (
+                    <div 
+                      key={item.rep} 
+                      className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700/60 flex items-center justify-between gap-3 hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold flex items-center justify-center shrink-0">
+                          {idx + 1}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+                            {item.rep}
+                          </p>
+                          <p className="text-[10px] text-slate-400">
+                            {item.deals} {item.deals === 1 ? 'deal' : 'deals'} • {pct}% of total sales
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="text-xs font-mono font-black text-indigo-600 dark:text-indigo-400 block">
+                          ৳{item.revenue.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Chart 3: Top Selling Products */}
