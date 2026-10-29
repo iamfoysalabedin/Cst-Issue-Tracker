@@ -35,6 +35,7 @@ export interface Issue {
   updated_at: string;
   response_time?: string;
   resolution_time?: string;
+  resolution_date?: string;
   client_reporting_time?: string;
   issue_resolved_confirmed?: 'Yes' | 'No' | 'No Response' | string;
   customer_satisfaction?: 'Satisfied' | 'Neutral' | 'Dissatisfied' | string;

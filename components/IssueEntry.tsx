@@ -70,6 +70,7 @@ const IssueEntry: React.FC = () => {
     issue_date: new Date().toISOString().split('T')[0],
     response_time: '',
     resolution_time: '',
+    resolution_date: new Date().toISOString().split('T')[0],
     client_reporting_time: '',
     issue_resolved_confirmed: '',
     customer_satisfaction: '',
@@ -288,6 +289,7 @@ const IssueEntry: React.FC = () => {
       issue_details: '',
       response_time: '',
       resolution_time: '',
+      resolution_date: new Date().toISOString().split('T')[0],
       client_reporting_time: '',
       issue_resolved_confirmed: '',
       customer_satisfaction: '',
@@ -926,26 +928,51 @@ const IssueEntry: React.FC = () => {
                   />
                 </div>
 
-                {/* Resolution Time */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                      Resolution Time
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, resolution_time: getCurrentTime12h() }))}
-                      className="text-xs text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-bold transition-colors cursor-pointer"
-                    >
-                      Set Now ({getCurrentTime12h()})
-                    </button>
+                {/* Resolution Date & Time */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Resolution Date */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                        Resolution Date
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, resolution_date: new Date().toISOString().split('T')[0] }))}
+                        className="text-xs text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-bold transition-colors cursor-pointer"
+                      >
+                        Today
+                      </button>
+                    </div>
+                    <input 
+                      type="date"
+                      value={formData.resolution_date}
+                      onChange={(e) => setFormData({...formData, resolution_date: e.target.value})}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-900 outline-none transition-all text-slate-900 dark:text-white text-sm"
+                    />
                   </div>
-                  <input 
-                    type="time"
-                    value={convert12hTo24h(formData.resolution_time)}
-                    onChange={(e) => setFormData({...formData, resolution_time: convert24hTo12h(e.target.value)})}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-900 outline-none transition-all text-slate-900 dark:text-white text-sm"
-                  />
+
+                  {/* Resolution Time */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                        Resolution Time
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, resolution_time: getCurrentTime12h() }))}
+                        className="text-xs text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-bold transition-colors cursor-pointer"
+                      >
+                        Set Now ({getCurrentTime12h()})
+                      </button>
+                    </div>
+                    <input 
+                      type="time"
+                      value={convert12hTo24h(formData.resolution_time)}
+                      onChange={(e) => setFormData({...formData, resolution_time: convert24hTo12h(e.target.value)})}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-900 outline-none transition-all text-slate-900 dark:text-white text-sm"
+                    />
+                  </div>
                 </div>
               </div>
             </div>

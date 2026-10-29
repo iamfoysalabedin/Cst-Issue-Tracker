@@ -64,13 +64,14 @@ export function parseIssueVirtualFields(issue: any): any {
   let details = issue.issue_details || '';
   let response_time = issue.response_time || '';
   let resolution_time = issue.resolution_time || '';
+  let resolution_date = issue.resolution_date || '';
   let client_reporting_time = issue.client_reporting_time || '';
   let issue_resolved_confirmed = issue.issue_resolved_confirmed || '';
   let customer_satisfaction = issue.customer_satisfaction || '';
   let feedback_date = issue.feedback_date || '';
 
   // Fallback to metadata tag format if the actual columns are empty
-  if (!response_time || !resolution_time || !client_reporting_time || !issue_resolved_confirmed || !customer_satisfaction || !feedback_date) {
+  if (!response_time || !resolution_time || !resolution_date || !client_reporting_time || !issue_resolved_confirmed || !customer_satisfaction || !feedback_date) {
     const tagRegex = /\[Metadata: [^\]]*\]/;
     const match = details.match(tagRegex);
     if (match) {
@@ -81,6 +82,9 @@ export function parseIssueVirtualFields(issue: any): any {
       
       const rsMatch = tagContent.match(/ResolutionTime="([^"]*)"/);
       if (rsMatch && !resolution_time) resolution_time = rsMatch[1];
+
+      const rsdMatch = tagContent.match(/ResolutionDate="([^"]*)"/);
+      if (rsdMatch && !resolution_date) resolution_date = rsdMatch[1];
 
       const crMatch = tagContent.match(/ClientReportingTime="([^"]*)"/);
       if (crMatch && !client_reporting_time) client_reporting_time = crMatch[1];
@@ -105,6 +109,7 @@ export function parseIssueVirtualFields(issue: any): any {
     issue_details: details,
     response_time: response_time || '',
     resolution_time: resolution_time || '',
+    resolution_date: resolution_date || '',
     client_reporting_time: client_reporting_time || '',
     issue_resolved_confirmed: issue_resolved_confirmed || '',
     customer_satisfaction: customer_satisfaction || '',
@@ -313,6 +318,7 @@ export const dbService = {
       const metaParts: string[] = [];
       if (issue.response_time) metaParts.push(`ResponseTime="${issue.response_time}"`);
       if (issue.resolution_time) metaParts.push(`ResolutionTime="${issue.resolution_time}"`);
+      if (issue.resolution_date) metaParts.push(`ResolutionDate="${issue.resolution_date}"`);
       if (issue.client_reporting_time) metaParts.push(`ClientReportingTime="${issue.client_reporting_time}"`);
       if (issue.issue_resolved_confirmed) metaParts.push(`IssueResolvedConfirmed="${issue.issue_resolved_confirmed}"`);
       if (issue.customer_satisfaction) metaParts.push(`CustomerSatisfaction="${issue.customer_satisfaction}"`);
@@ -327,6 +333,7 @@ export const dbService = {
       delete fallbackPayload.issue_resolved_confirmed;
       delete fallbackPayload.customer_satisfaction;
       delete fallbackPayload.feedback_date;
+      delete fallbackPayload.resolution_date;
 
       const retryRes = await supabase
         .from('issues')
@@ -390,6 +397,7 @@ export const dbService = {
       const metaParts: string[] = [];
       if (updates.response_time !== undefined) metaParts.push(`ResponseTime="${updates.response_time}"`);
       if (updates.resolution_time !== undefined) metaParts.push(`ResolutionTime="${updates.resolution_time}"`);
+      if (updates.resolution_date !== undefined) metaParts.push(`ResolutionDate="${updates.resolution_date}"`);
       if (updates.client_reporting_time !== undefined) metaParts.push(`ClientReportingTime="${updates.client_reporting_time}"`);
       if (updates.issue_resolved_confirmed !== undefined) metaParts.push(`IssueResolvedConfirmed="${updates.issue_resolved_confirmed}"`);
       if (updates.customer_satisfaction !== undefined) metaParts.push(`CustomerSatisfaction="${updates.customer_satisfaction}"`);
@@ -404,6 +412,7 @@ export const dbService = {
       delete fallbackUpdates.issue_resolved_confirmed;
       delete fallbackUpdates.customer_satisfaction;
       delete fallbackUpdates.feedback_date;
+      delete fallbackUpdates.resolution_date;
 
       const retryRes = await supabase
         .from('issues')

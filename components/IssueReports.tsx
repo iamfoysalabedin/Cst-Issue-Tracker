@@ -255,6 +255,7 @@ const IssueReports: React.FC = () => {
           issue_date: parseDate(row['Issue Date'] || row['issue_date']),
           response_time: row['Response Time'] || row['response_time'] || '',
           resolution_time: row['Resolution Time'] || row['resolution_time'] || '',
+          resolution_date: row['Resolution Date'] || row['resolution_date'] || '',
           client_reporting_time: row['Client Reporting Time'] || row['client_reporting_time'] || '',
           issue_resolved_confirmed: row['Issue Resolved Confirmed'] || row['issue_resolved_confirmed'] || '',
           customer_satisfaction: row['Customer Satisfaction'] || row['customer_satisfaction'] || '',
@@ -293,6 +294,7 @@ const IssueReports: React.FC = () => {
         'Issue Details': 'This is a sample bug description',
         'Issue Date': formattedDate,
         'Response Time': '10:30 AM',
+        'Resolution Date': formattedDate,
         'Resolution Time': '11:45 AM',
         'Client Reporting Time': '10:15 AM',
         'Issue Resolved Confirmed': 'Yes',
@@ -375,6 +377,7 @@ const IssueReports: React.FC = () => {
       'Issue Date & Time',
       'Client Reporting Time',
       'Response Time',
+      'Resolution Date',
       'Resolution Time',
       'Issue Resolved Confirmed',
       'Customer Satisfaction',
@@ -396,6 +399,7 @@ const IssueReports: React.FC = () => {
       formatIssueDateTime(i.issue_date, i.created_at),
       i.client_reporting_time || '',
       i.response_time || '',
+      i.resolution_date || '',
       i.resolution_time || '',
       i.issue_resolved_confirmed || '',
       i.customer_satisfaction || '',
@@ -594,6 +598,7 @@ const IssueReports: React.FC = () => {
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Issue Date and time</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Client Reporting Time</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Response Time</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Resolution Date</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Resolution Time</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Resolved Confirmed</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Satisfaction</th>
@@ -641,6 +646,7 @@ const IssueReports: React.FC = () => {
                   <td className="px-4 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">{formatIssueDateTime(issue.issue_date, issue.created_at)}</td>
                   <td className="px-4 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">{issue.client_reporting_time || '-'}</td>
                   <td className="px-4 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">{issue.response_time || '-'}</td>
+                  <td className="px-4 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">{issue.resolution_date || '-'}</td>
                   <td className="px-4 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">{issue.resolution_time || '-'}</td>
                   <td className="px-4 py-2.5 whitespace-nowrap">
                     {issue.issue_resolved_confirmed ? (
@@ -694,7 +700,7 @@ const IssueReports: React.FC = () => {
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan={17} className="px-4 py-10 text-center text-slate-400 text-xs">
+                  <td colSpan={18} className="px-4 py-10 text-center text-slate-400 text-xs">
                     No issues found matching your criteria.
                   </td>
                 </tr>
@@ -922,7 +928,7 @@ const IssueReports: React.FC = () => {
                   <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
                     Timing & SLA Metrics
                   </span>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                     <div className="space-y-1">
                       <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                         Ticket Create Time
@@ -960,6 +966,17 @@ const IssueReports: React.FC = () => {
                         type="time"
                         value={convert12hTo24h(editingIssue.response_time || '')}
                         onChange={(e) => setEditingIssue({...editingIssue, response_time: convert24hTo12h(e.target.value)})}
+                        className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        Resolution Date
+                      </label>
+                      <input 
+                        type="date"
+                        value={editingIssue.resolution_date || ''}
+                        onChange={(e) => setEditingIssue({...editingIssue, resolution_date: e.target.value})}
                         className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
                       />
                     </div>
